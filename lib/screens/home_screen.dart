@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'class_management_screen.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -62,8 +64,27 @@ class HomeScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.add, color: Colors.white, size: 28),
-
+               IconButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ClassManagementScreen(),
+      ),
+    );
+  },
+  style: IconButton.styleFrom(
+    backgroundColor: Colors.white,
+    shape: const CircleBorder(),
+    fixedSize: const Size(40, 40),
+  ),
+  icon: const Icon(
+    Icons.add,
+    size: 28,
+    color: Colors.blueAccent,
+  ),
+),
+          
                 const SizedBox(width: 10),
 
                 Text(
@@ -79,89 +100,85 @@ class HomeScreen extends StatelessWidget {
           ),
 
           SizedBox(height: 15),
-     Container(
-  width: screenWidth * 0.9,
-  height: screenWidth * 0.8 * (3 / 10),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(10),
-    border: Border.all(
-      color: Colors.black,
-      width: 0.5,
-    ),
-  ),
-  child: Row(
-    children: [
-      // آیکون سمت چپ
-      const Padding(
-        padding: EdgeInsets.only(left: 20),
-        child: Icon(
-          Icons.article,
-          color: Color.fromARGB(255, 106, 60, 163),
-          size: 40,
-        ),
-      ),
-
-      // متن‌ها
-      Expanded(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 15),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'صنف جدید',
-                textAlign: TextAlign.right,
-                style: GoogleFonts.notoSansArabic(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+          Container(
+            width: screenWidth * 0.9,
+            height: screenWidth * 0.8 * (3 / 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.black, width: 0.5),
+            ),
+            child: Row(
+              children: [
+                // آیکون سمت چپ
+                const Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Icon(
+                    Icons.article,
+                    color: Color.fromARGB(255, 106, 60, 163),
+                    size: 40,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 8),
+                // متن‌ها
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 15),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'صنف جدید',
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.notoSansArabic(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
 
-              Text(
-                'مشاهده و مدیریت صنوف ثبت شده',
-                maxLines: 1,
-                overflow: TextOverflow.visible,
-                textAlign: TextAlign.right,
-                style: GoogleFonts.notoSansArabic(
-                  fontSize: 10,
-                  color: Colors.black87,
+                        const SizedBox(height: 8),
+
+                        Text(
+                          'مشاهده و مدیریت صنوف ثبت شده',
+                          maxLines: 1,
+                          overflow: TextOverflow.visible,
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.notoSansArabic(
+                            fontSize: 10,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
-    ],
-  ),
-),
-
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-  currentIndex: 0,
-  selectedItemColor: const Color.fromARGB(255, 106, 60, 163),
-  unselectedItemColor: Colors.grey,
-  type: BottomNavigationBarType.fixed,
+        currentIndex: 0,
+        selectedItemColor: const Color.fromARGB(255, 106, 60, 163),
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
 
-  items: const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home_outlined),
-      activeIcon: Icon(Icons.home),
-      label: 'خانه',
-    ),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'خانه',
+          ),
 
-    BottomNavigationBarItem(
-      icon: Icon(Icons.output_outlined),
-      activeIcon: Icon(Icons.output),
-      label: 'خروجی',
-    ),
-  ],
-),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.output_outlined),
+            activeIcon: Icon(Icons.output),
+            label: 'خروجی',
+          ),
+        ],
+      ),
     );
   }
 }
