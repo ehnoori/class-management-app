@@ -1,16 +1,15 @@
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home_screen.dart';
 
-class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
-class _OnboardingScreenState extends State<OnboardingScreen> {
+
+class _SplashScreenState extends State<SplashScreen> {
   final PageController _pageController = PageController();
 
   int currentPage = 0;
@@ -19,14 +18,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       'image': 'assets/images/photo_1.jpg',
       'title': 'به اپلیکیشن ارزیابی صنف خوش آمدید!',
-      'description':
-          'با استفاده از این برنامه می‌توانید مشخصات صنف و اعضای آن را ثبت و ارزیابی کنید.',
+      'description': 'با استفاده از این برنامه می‌توانید مشخصات صنف و اعضای آن را ثبت و ارزیابی کنید.',
     },
     {
       'image': 'assets/images/photo_2.jpg',
       'title': 'صنف‌های خود را مدیریت کنید',
-      'description':
-          'صنف جدید ایجاد کنید، اعضا را اضافه کنید و اطلاعات صنف‌ها را مدیریت کنید.',
+      'description': 'صنف جدید ایجاد کنید، اعضا را اضافه کنید و اطلاعات صنف‌ها را مدیریت کنید.',
     },
     {
       'image': 'assets/images/photo_3.jpg',
@@ -42,7 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  // رفتن به صفحه بعد یا پایان Onboarding
+  // رفتن به صفحه بعد
   void nextPage() {
     if (currentPage < pages.length - 1) {
       _pageController.nextPage(
@@ -50,23 +47,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      finishOnboarding();
+      finishSplash();
     }
   }
 
-  // ذخیره اینکه کاربر Onboarding را دیده است
-  Future<void> finishOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setBool('hasSeenOnboarding', true);
-
-    if (!mounted) return;
-
+  // رفتن به HomeScreen
+  void finishSplash() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
     );
   }
 
@@ -79,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           children: [
             // =========================
-            // Onboarding Pages
+            // Pages
             // =========================
             Expanded(
               child: PageView.builder(
@@ -103,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
 
             // =========================
-            // Page Indicator
+            // Indicator
             // =========================
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -116,7 +105,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             const SizedBox(height: 25),
 
             // =========================
-            // Next / Start Button
+            // Button
             // =========================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -137,9 +126,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
 
                   child: Text(
-                    currentPage == pages.length - 1
-                        ? 'شروع کنید'
-                        : 'ادامه',
+                    currentPage == pages.length - 1 ? 'شروع کنید' : 'ادامه',
 
                     style: const TextStyle(
                       fontSize: 17,
@@ -158,7 +145,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // =========================
-  // Onboarding Page
+  // Page Content
   // =========================
 
   Widget _buildPage({
@@ -179,10 +166,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               height: 330,
               width: double.infinity,
 
-              child: Image.asset(
-                image,
-                fit: BoxFit.contain,
-              ),
+              child: Image.asset(image, fit: BoxFit.contain),
             ),
 
             const SizedBox(height: 25),
@@ -222,7 +206,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   // =========================
-  // Page Indicator
+  // Indicator
   // =========================
 
   Widget _buildIndicator(int index) {
@@ -237,9 +221,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: 9,
 
       decoration: BoxDecoration(
-        color: isActive
-            ? const Color(0xFF3478F6)
-            : const Color(0xFFD2D9E8),
+        color: isActive ? const Color(0xFF3478F6) : const Color(0xFFD2D9E8),
 
         borderRadius: BorderRadius.circular(20),
       ),

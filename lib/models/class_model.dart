@@ -8,7 +8,9 @@ class ClassModel {
 
   late String className;
 
-  late int memberCount;
+  late String teacherName;
 
-  List<String> members = [];
+  late String classType;
+
+  late List<String> members;
 }

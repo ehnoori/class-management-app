@@ -22,15 +22,20 @@ const ClassModelSchema = CollectionSchema(
       name: r'className',
       type: IsarType.string,
     ),
-    r'memberCount': PropertySchema(
+    r'classType': PropertySchema(
       id: 1,
-      name: r'memberCount',
-      type: IsarType.long,
+      name: r'classType',
+      type: IsarType.string,
     ),
     r'members': PropertySchema(
       id: 2,
       name: r'members',
       type: IsarType.stringList,
+    ),
+    r'teacherName': PropertySchema(
+      id: 3,
+      name: r'teacherName',
+      type: IsarType.string,
     )
   },
   estimateSize: _classModelEstimateSize,
@@ -54,6 +59,7 @@ int _classModelEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.className.length * 3;
+  bytesCount += 3 + object.classType.length * 3;
   bytesCount += 3 + object.members.length * 3;
   {
     for (var i = 0; i < object.members.length; i++) {
@@ -61,6 +67,7 @@ int _classModelEstimateSize(
       bytesCount += value.length * 3;
     }
   }
+  bytesCount += 3 + object.teacherName.length * 3;
   return bytesCount;
 }
 
@@ -71,8 +78,9 @@ void _classModelSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.className);
-  writer.writeLong(offsets[1], object.memberCount);
+  writer.writeString(offsets[1], object.classType);
   writer.writeStringList(offsets[2], object.members);
+  writer.writeString(offsets[3], object.teacherName);
 }
 
 ClassModel _classModelDeserialize(
@@ -83,9 +91,10 @@ ClassModel _classModelDeserialize(
 ) {
   final object = ClassModel();
   object.className = reader.readString(offsets[0]);
+  object.classType = reader.readString(offsets[1]);
   object.id = id;
-  object.memberCount = reader.readLong(offsets[1]);
   object.members = reader.readStringList(offsets[2]) ?? [];
+  object.teacherName = reader.readString(offsets[3]);
   return object;
 }
 
@@ -99,9 +108,11 @@ P _classModelDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
       return (reader.readStringList(offset) ?? []) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -332,6 +343,140 @@ extension ClassModelQueryFilter
     });
   }
 
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'classType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      classTypeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'classType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'classType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'classType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      classTypeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'classType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'classType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'classType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'classType',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      classTypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'classType',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      classTypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'classType',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -377,62 +522,6 @@ extension ClassModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
-      memberCountEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'memberCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
-      memberCountGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'memberCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
-      memberCountLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'memberCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
-      memberCountBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'memberCount',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -664,6 +753,142 @@ extension ClassModelQueryFilter
       );
     });
   }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'teacherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'teacherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'teacherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'teacherName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'teacherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'teacherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'teacherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'teacherName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'teacherName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
+      teacherNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'teacherName',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension ClassModelQueryObject
@@ -686,15 +911,27 @@ extension ClassModelQuerySortBy
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByMemberCount() {
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByClassType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'memberCount', Sort.asc);
+      return query.addSortBy(r'classType', Sort.asc);
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByMemberCountDesc() {
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByClassTypeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'memberCount', Sort.desc);
+      return query.addSortBy(r'classType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByTeacherName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'teacherName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByTeacherNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'teacherName', Sort.desc);
     });
   }
 }
@@ -713,6 +950,18 @@ extension ClassModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByClassType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'classType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByClassTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'classType', Sort.desc);
+    });
+  }
+
   QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -725,15 +974,15 @@ extension ClassModelQuerySortThenBy
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByMemberCount() {
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByTeacherName() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'memberCount', Sort.asc);
+      return query.addSortBy(r'teacherName', Sort.asc);
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByMemberCountDesc() {
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByTeacherNameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'memberCount', Sort.desc);
+      return query.addSortBy(r'teacherName', Sort.desc);
     });
   }
 }
@@ -747,15 +996,23 @@ extension ClassModelQueryWhereDistinct
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QDistinct> distinctByMemberCount() {
+  QueryBuilder<ClassModel, ClassModel, QDistinct> distinctByClassType(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'memberCount');
+      return query.addDistinctBy(r'classType', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<ClassModel, ClassModel, QDistinct> distinctByMembers() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'members');
+    });
+  }
+
+  QueryBuilder<ClassModel, ClassModel, QDistinct> distinctByTeacherName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'teacherName', caseSensitive: caseSensitive);
     });
   }
 }
@@ -774,15 +1031,21 @@ extension ClassModelQueryProperty
     });
   }
 
-  QueryBuilder<ClassModel, int, QQueryOperations> memberCountProperty() {
+  QueryBuilder<ClassModel, String, QQueryOperations> classTypeProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'memberCount');
+      return query.addPropertyName(r'classType');
     });
   }
 
   QueryBuilder<ClassModel, List<String>, QQueryOperations> membersProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'members');
+    });
+  }
+
+  QueryBuilder<ClassModel, String, QQueryOperations> teacherNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'teacherName');
     });
   }
 }
