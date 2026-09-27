@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../database/isar_service.dart';
+import '../models/class_model.dart';
 import 'evaluation_screen.dart';
 
-import '../models/class_model.dart';
+import 'evaluation_results_screen.dart';
 
 class StudentSelectionScreen extends StatefulWidget {
   final ClassModel classModel;
@@ -17,11 +19,46 @@ class StudentSelectionScreen extends StatefulWidget {
 class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   int? selectedIndex;
 
+  /// نام شاگردانی که ارزیابی شده‌اند
+  Set<String> evaluatedStudents = {};
+
+  bool isLoading = true;
+
+  // ==================================================
+  // Init
+  // ==================================================
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEvaluatedStudents();
+  }
+
+  // ==================================================
+  // Load evaluated students
+  // ==================================================
+
+  Future<void> _loadEvaluatedStudents() async {
+    final evaluations = await IsarService.getClassEvaluations(
+      widget.classModel.id,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      evaluatedStudents = evaluations
+          .map((evaluation) => evaluation.studentName)
+          .toSet();
+
+      isLoading = false;
+    });
+  }
+
   // ==================================================
   // Continue
   // ==================================================
 
-  void continueToQuestions() {
+  Future<void> continueToQuestions() async {
     if (selectedIndex == null) {
       _showMessage('لطفاً یک شاگرد را انتخاب کنید');
       return;
@@ -29,13 +66,50 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
     final String selectedStudent = widget.classModel.members[selectedIndex!];
 
-    Navigator.push(
+    // اگر قبلاً ارزیابی شده باشد
+    if (evaluatedStudents.contains(selectedStudent)) {
+      _showMessage('این شاگرد قبلاً ارزیابی شده است');
+      return;
+    }
+
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EvaluationScreen(
           classModel: widget.classModel,
           studentName: selectedStudent,
         ),
+      ),
+    );
+
+    if (!mounted) return;
+
+    // بعد از ذخیره موفق نتیجه
+    if (result == true) {
+      setState(() {
+        evaluatedStudents.add(selectedStudent);
+        selectedIndex = null;
+      });
+
+      _showMessage('ارزیابی $selectedStudent ذخیره شد');
+
+      // اگر تمام شاگردان ارزیابی شده باشند
+      if (evaluatedStudents.length == widget.classModel.members.length) {
+        _showMessage('ارزیابی تمام شاگردان تکمیل شد');
+      }
+    }
+  }
+
+  // ==================================================
+  // Results
+  // ==================================================
+
+  void openResults() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            EvaluationResultsScreen(classModel: widget.classModel),
       ),
     );
   }
@@ -72,6 +146,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     final List<String> students = widget.classModel.members;
+
+    final bool allCompleted =
+        students.isNotEmpty && evaluatedStudents.length == students.length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F7FC),
@@ -128,38 +205,55 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
           ),
           child: Column(
             children: [
-              // ==================================================
-              // Header
-              // ==================================================
-
               _buildHeader(students.length),
 
               const SizedBox(height: 18),
 
-              // ==================================================
-              // Students
-              // ==================================================
-              Expanded(
-                child: students.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: students.length,
-                        itemBuilder: (context, index) {
-                          return _buildStudentItem(
-                            name: students[index],
-                            index: index,
-                          );
-                        },
-                      ),
-              ),
+              if (isLoading)
+                const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(color: Color(0xFF1565E8)),
+                  ),
+                )
+              else
+                Expanded(
+                  child: students.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: students.length,
+                          itemBuilder: (context, index) {
+                            return _buildStudentItem(
+                              name: students[index],
+                              index: index,
+                            );
+                          },
+                        ),
+                ),
 
               const SizedBox(height: 12),
 
-              // ==================================================
-              // Continue Button
-              // ==================================================
+              // دکمه ادامه
               _buildContinueButton(),
+
+              const SizedBox(height: 10),
+
+              // دکمه نتایج
+              _buildResultsButton(enabled: evaluatedStudents.isNotEmpty),
+
+              // اگر همه تکمیل شده باشند
+              if (allCompleted) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'ارزیابی تمام شاگردان تکمیل شده است',
+                  textDirection: TextDirection.rtl,
+                  style: GoogleFonts.notoSansArabic(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF239B56),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -172,6 +266,8 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   // ==================================================
 
   Widget _buildHeader(int count) {
+    final int completed = evaluatedStudents.length;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(19),
@@ -214,7 +310,7 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'انتخاب شاگرد',
+                  'ارزیابی شاگردان',
                   textDirection: TextDirection.rtl,
                   style: GoogleFonts.notoSansArabic(
                     fontSize: 18,
@@ -226,7 +322,7 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                 const SizedBox(height: 4),
 
                 Text(
-                  'یک شاگرد را برای ارزیابی انتخاب کنید',
+                  'شاگردان را یکی‌یکی برای ارزیابی انتخاب کنید',
                   textDirection: TextDirection.rtl,
                   textAlign: TextAlign.right,
                   style: GoogleFonts.notoSansArabic(
@@ -238,7 +334,7 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                 const SizedBox(height: 7),
 
                 Text(
-                  '$count شاگرد',
+                  '$completed از $count شاگرد ارزیابی شده',
                   textDirection: TextDirection.rtl,
                   style: GoogleFonts.notoSansArabic(
                     fontSize: 12,
@@ -260,14 +356,19 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
   Widget _buildStudentItem({required String name, required int index}) {
     final bool isSelected = selectedIndex == index;
+    final bool isEvaluated = evaluatedStudents.contains(name);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 11),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isEvaluated ? const Color(0xFFF0F8F3) : Colors.white,
         borderRadius: BorderRadius.circular(19),
         border: Border.all(
-          color: isSelected ? const Color(0xFF3478F6) : const Color(0xFFE4EAF3),
+          color: isEvaluated
+              ? const Color(0xFFB9DFC7)
+              : isSelected
+              ? const Color(0xFF3478F6)
+              : const Color(0xFFE4EAF3),
           width: isSelected ? 1.5 : 1,
         ),
         boxShadow: [
@@ -280,11 +381,15 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(19),
-        onTap: () {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
+
+        onTap: isEvaluated
+            ? null
+            : () {
+                setState(() {
+                  selectedIndex = index;
+                });
+              },
+
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
@@ -295,20 +400,24 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
               // ==================================================
 
               Checkbox(
-                value: isSelected,
-                activeColor: const Color(0xFF1565E8),
+                value: isEvaluated || isSelected,
+                activeColor: isEvaluated
+                    ? const Color(0xFF239B56)
+                    : const Color(0xFF1565E8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5),
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    if (value == true) {
-                      selectedIndex = index;
-                    } else {
-                      selectedIndex = null;
-                    }
-                  });
-                },
+                onChanged: isEvaluated
+                    ? null
+                    : (value) {
+                        setState(() {
+                          if (value == true) {
+                            selectedIndex = index;
+                          } else {
+                            selectedIndex = null;
+                          }
+                        });
+                      },
               ),
 
               const SizedBox(width: 4),
@@ -320,14 +429,18 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isSelected
+                  color: isEvaluated
+                      ? const Color(0xFFDDF3E5)
+                      : isSelected
                       ? const Color(0xFFE1EDFF)
                       : const Color(0xFFF1F5FA),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.person_rounded,
-                  color: isSelected
+                  isEvaluated ? Icons.check_rounded : Icons.person_rounded,
+                  color: isEvaluated
+                      ? const Color(0xFF239B56)
+                      : isSelected
                       ? const Color(0xFF1565E8)
                       : const Color(0xFF7C8DA8),
                   size: 25,
@@ -340,14 +453,30 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
               // Name
               // ==================================================
               Expanded(
-                child: Text(
-                  name,
-                  textDirection: TextDirection.rtl,
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 15,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                    color: const Color(0xFF172B5B),
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      name,
+                      textDirection: TextDirection.rtl,
+                      style: GoogleFonts.notoSansArabic(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF172B5B),
+                      ),
+                    ),
+
+                    if (isEvaluated)
+                      Text(
+                        'ارزیابی شده',
+                        textDirection: TextDirection.rtl,
+                        style: GoogleFonts.notoSansArabic(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF239B56),
+                        ),
+                      ),
+                  ],
                 ),
               ),
 
@@ -359,7 +488,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                 height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected
+                  color: isEvaluated
+                      ? const Color(0xFFDDF3E5)
+                      : isSelected
                       ? const Color(0xFFE1EDFF)
                       : const Color(0xFFF3F6FA),
                   borderRadius: BorderRadius.circular(9),
@@ -369,7 +500,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                   style: GoogleFonts.notoSansArabic(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isSelected
+                    color: isEvaluated
+                        ? const Color(0xFF239B56)
+                        : isSelected
                         ? const Color(0xFF1565E8)
                         : const Color(0xFF7C8DA8),
                   ),
@@ -398,7 +531,7 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
 
         label: Text(
-          'ادامه',
+          'شروع ارزیابی',
           textDirection: TextDirection.rtl,
           style: GoogleFonts.notoSansArabic(
             fontSize: 15,
@@ -413,6 +546,40 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ==================================================
+  // Results Button
+  // ==================================================
+
+  Widget _buildResultsButton({required bool enabled}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: enabled ? openResults : null,
+
+        icon: const Icon(Icons.assessment_rounded),
+
+        label: Text(
+          'مشاهده نتایج',
+          textDirection: TextDirection.rtl,
+          style: GoogleFonts.notoSansArabic(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF1565E8),
+          disabledForegroundColor: const Color(0xFFB7C9E8),
+          side: const BorderSide(color: Color(0xFFB7C9E8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(17),
           ),
         ),
       ),

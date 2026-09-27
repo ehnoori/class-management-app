@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../database/isar_service.dart';
 import '../models/class_model.dart';
+import '../models/evaluation_model.dart';
 
 class EvaluationScreen extends StatefulWidget {
   final ClassModel classModel;
@@ -20,10 +22,12 @@ class EvaluationScreen extends StatefulWidget {
 class _EvaluationScreenState extends State<EvaluationScreen> {
   int currentQuestionIndex = 0;
 
-  // جواب انتخاب‌شده برای هر سوال
-  final List<int?> selectedAnswers = List<int?>.filled(10, null);
+  bool isSaving = false;
 
-  // ۱۰ سوال
+  // ==================================================
+  // Questions
+  // ==================================================
+
   final List<String> questions = [
     'کمپیوتر چیست؟',
     'کدام یک از موارد زیر یک وسیله ورودی کمپیوتر است؟',
@@ -37,7 +41,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     'کدام وسیله برای ذخیره اطلاعات استفاده می‌شود؟',
   ];
 
-  // چهار گزینه برای هر سوال
+  // ==================================================
+  // Options
+  // ==================================================
 
   final List<List<String>> options = [
     [
@@ -82,20 +88,58 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     ['فلش‌دیسک', 'مانیتور', 'ماوس', 'اسپیکر'],
   ];
 
+  // ==================================================
+  // Correct Answers
+  // ==================================================
+
+  // شماره گزینه صحیح هر سوال
+  //
+  // 0 = گزینه اول
+  // 1 = گزینه دوم
+  // 2 = گزینه سوم
+  // 3 = گزینه چهارم
+  //
+  final List<int> correctAnswers = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+  // ==================================================
+  // Selected Answers
+  // ==================================================
+
+  late List<int?> selectedAnswers;
+
+  // ==================================================
+  // Init
+  // ==================================================
+
+  @override
+  void initState() {
+    super.initState();
+
+    selectedAnswers = List<int?>.filled(questions.length, null);
+  }
+
+  // ==================================================
+  // Select Answer
+  // ==================================================
+
   void selectAnswer(int optionIndex) {
+    if (isSaving) return;
+
     setState(() {
       selectedAnswers[currentQuestionIndex] = optionIndex;
     });
   }
 
+  // ==================================================
+  // Next Question
+  // ==================================================
+
   void nextQuestion() {
-    // اگر جواب انتخاب نشده باشد
     if (selectedAnswers[currentQuestionIndex] == null) {
       _showMessage('لطفاً یکی از گزینه‌ها را انتخاب کنید');
       return;
     }
 
-    // اگر سوال آخر باشد
     if (currentQuestionIndex == questions.length - 1) {
       submitEvaluation();
       return;
@@ -106,8 +150,12 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     });
   }
 
+  // ==================================================
+  // Previous Question
+  // ==================================================
+
   void previousQuestion() {
-    if (currentQuestionIndex == 0) {
+    if (currentQuestionIndex == 0 || isSaving) {
       return;
     }
 
@@ -116,60 +164,75 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     });
   }
 
-  void submitEvaluation() {
-    // جواب‌های انتخاب‌شده
-    final answers = selectedAnswers;
+  // ==================================================
+  // Submit Evaluation
+  // ==================================================
 
-    debugPrint('شاگرد: ${widget.studentName}');
-    debugPrint('صنف: ${widget.classModel.className}');
-    debugPrint('جواب‌ها: $answers');
+  Future<void> submitEvaluation() async {
+    // بررسی تمام جواب‌ها
+    final bool allAnswered = selectedAnswers.every((answer) => answer != null);
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-          ),
-          title: Text(
-            'ارزیابی ثبت شد',
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.right,
-            style: GoogleFonts.notoSansArabic(
-              fontSize: 19,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF172B5B),
-            ),
-          ),
-          content: Text(
-            'ارزیابی شاگرد «${widget.studentName}» با موفقیت ثبت شد.',
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.right,
-            style: GoogleFonts.notoSansArabic(
-              fontSize: 14,
-              color: const Color(0xFF65748B),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-              child: Text(
-                'تأیید',
-                style: GoogleFonts.notoSansArabic(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1565E8),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+    if (!allAnswered) {
+      _showMessage('لطفاً به تمام سوالات پاسخ دهید');
+      return;
+    }
+
+    setState(() {
+      isSaving = true;
+    });
+
+    try {
+      // محاسبه تعداد جواب‌های درست
+      int correctCount = 0;
+
+      for (int i = 0; i < questions.length; i++) {
+        if (selectedAnswers[i] == correctAnswers[i]) {
+          correctCount++;
+        }
+      }
+
+      // ==================================================
+      // ساخت EvaluationModel
+      // ==================================================
+
+      final EvaluationModel evaluation = EvaluationModel()
+        ..classId = widget.classModel.id
+        ..className = widget.classModel.className
+        ..studentName = widget.studentName
+        ..correctAnswers = correctCount
+        ..totalQuestions = questions.length
+        ..answers = selectedAnswers.map((answer) => answer ?? -1).toList()
+        ..evaluatedAt = DateTime.now();
+
+      // ==================================================
+      // ذخیره در Isar
+      // ==================================================
+
+      await IsarService.saveEvaluation(evaluation);
+
+      if (!mounted) return;
+
+      // ==================================================
+      // بازگشت به صفحه شاگردان
+      // ==================================================
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isSaving = false;
+      });
+
+      _showMessage('خطا در ذخیره ارزیابی');
+
+      debugPrint('Evaluation Error: $e');
+    }
   }
+
+  // ==================================================
+  // Message
+  // ==================================================
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -190,6 +253,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     );
   }
 
+  // ==================================================
+  // Build
+  // ==================================================
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -204,89 +271,108 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
 
     final double progress = questionNumber / questions.length;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FC),
-      appBar: AppBar(
+    return PopScope(
+      canPop: !isSaving,
+      child: Scaffold(
         backgroundColor: const Color(0xFFF3F7FC),
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(13),
-              ),
-            ),
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 18,
-              color: Color(0xFF172B5B),
-            ),
-          ),
-        ),
-        title: Text(
-          'ارزیابی شاگرد',
-          style: GoogleFonts.notoSansArabic(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF172B5B),
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            screenWidth * 0.055,
-            8,
-            screenWidth * 0.055,
-            20,
-          ),
-          child: Column(
-            children: [
-              _buildStudentHeader(),
 
-              const SizedBox(height: 18),
+        // ==================================================
+        // AppBar
+        // ==================================================
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF3F7FC),
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
 
-              _buildProgress(questionNumber, progress),
-
-              const SizedBox(height: 22),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _buildQuestionCard(questionNumber, currentQuestion),
-
-                      const SizedBox(height: 18),
-
-                      ...List.generate(currentOptions.length, (index) {
-                        return _buildOption(
-                          index: index,
-                          text: currentOptions[index],
-                          isSelected: selectedOption == index,
-                        );
-                      }),
-                    ],
-                  ),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: IconButton(
+              onPressed: isSaving
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                    },
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
                 ),
               ),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 18,
+                color: Color(0xFF172B5B),
+              ),
+            ),
+          ),
 
-              const SizedBox(height: 12),
+          title: Text(
+            'ارزیابی شاگرد',
+            style: GoogleFonts.notoSansArabic(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF172B5B),
+            ),
+          ),
+        ),
 
-              _buildNavigationButtons(),
-            ],
+        // ==================================================
+        // Body
+        // ==================================================
+        body: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              screenWidth * 0.055,
+              8,
+              screenWidth * 0.055,
+              20,
+            ),
+            child: Column(
+              children: [
+                _buildStudentHeader(),
+
+                const SizedBox(height: 18),
+
+                _buildProgress(questionNumber, progress),
+
+                const SizedBox(height: 22),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        _buildQuestionCard(questionNumber, currentQuestion),
+
+                        const SizedBox(height: 18),
+
+                        ...List.generate(currentOptions.length, (index) {
+                          return _buildOption(
+                            index: index,
+                            text: currentOptions[index],
+                            isSelected: selectedOption == index,
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                _buildNavigationButtons(),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  // ==================================================
+  // Student Header
+  // ==================================================
 
   Widget _buildStudentHeader() {
     return Container(
@@ -320,7 +406,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
               size: 28,
             ),
           ),
+
           const SizedBox(width: 13),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -337,7 +425,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                     color: const Color(0xFF172B5B),
                   ),
                 ),
+
                 const SizedBox(height: 3),
+
                 Text(
                   widget.classModel.className,
                   textDirection: TextDirection.rtl,
@@ -355,6 +445,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     );
   }
 
+  // ==================================================
+  // Progress
+  // ==================================================
+
   Widget _buildProgress(int questionNumber, double progress) {
     return Column(
       children: [
@@ -370,7 +464,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                 color: const Color(0xFF172B5B),
               ),
             ),
+
             const Spacer(),
+
             Text(
               '${(progress * 100).round()}%',
               style: GoogleFonts.notoSansArabic(
@@ -381,7 +477,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
             ),
           ],
         ),
+
         const SizedBox(height: 8),
+
         ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: LinearProgressIndicator(
@@ -394,6 +492,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
       ],
     );
   }
+
+  // ==================================================
+  // Question Card
+  // ==================================================
 
   Widget _buildQuestionCard(int questionNumber, String question) {
     return Container(
@@ -437,7 +539,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(width: 10),
+
               Text(
                 'سوال ارزیابی',
                 textDirection: TextDirection.rtl,
@@ -449,7 +553,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
               ),
             ],
           ),
+
           const SizedBox(height: 17),
+
           Text(
             question,
             textDirection: TextDirection.rtl,
@@ -465,6 +571,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
       ),
     );
   }
+
+  // ==================================================
+  // Option
+  // ==================================================
 
   Widget _buildOption({
     required int index,
@@ -491,7 +601,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(17),
-        onTap: () => selectAnswer(index),
+        onTap: isSaving ? null : () => selectAnswer(index),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(
@@ -521,7 +631,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                       )
                     : null,
               ),
+
               const SizedBox(width: 13),
+
               Expanded(
                 child: Text(
                   text,
@@ -536,7 +648,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                   ),
                 ),
               ),
+
               const SizedBox(width: 10),
+
               Container(
                 width: 30,
                 height: 30,
@@ -565,6 +679,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     );
   }
 
+  // ==================================================
+  // Navigation Buttons
+  // ==================================================
+
   Widget _buildNavigationButtons() {
     final bool isFirstQuestion = currentQuestionIndex == 0;
 
@@ -577,7 +695,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
             height: 56,
             width: 56,
             child: OutlinedButton(
-              onPressed: previousQuestion,
+              onPressed: isSaving ? null : previousQuestion,
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.zero,
                 side: const BorderSide(color: Color(0xFFD6E0EC)),
@@ -591,19 +709,38 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
               ),
             ),
           ),
+
           const SizedBox(width: 10),
         ],
+
         Expanded(
           child: SizedBox(
             height: 56,
             child: ElevatedButton.icon(
-              onPressed: nextQuestion,
-              icon: Icon(
-                isLastQuestion ? Icons.check_rounded : Icons.arrow_back_rounded,
-                color: Colors.white,
-              ),
+              onPressed: isSaving ? null : nextQuestion,
+
+              icon: isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      isLastQuestion
+                          ? Icons.check_rounded
+                          : Icons.arrow_back_rounded,
+                      color: Colors.white,
+                    ),
+
               label: Text(
-                isLastQuestion ? 'ثبت ارزیابی' : 'سوال بعدی',
+                isSaving
+                    ? 'در حال ذخیره...'
+                    : isLastQuestion
+                    ? 'ذخیره ارزیابی'
+                    : 'سوال بعدی',
                 textDirection: TextDirection.rtl,
                 style: GoogleFonts.notoSansArabic(
                   fontSize: 15,
@@ -611,8 +748,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                   color: Colors.white,
                 ),
               ),
+
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1565E8),
+                disabledBackgroundColor: const Color(0xFF9DB8E5),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(17),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'class_list_screen.dart';
 import 'class_management_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,20 +17,43 @@ class _HomeScreenState extends State<HomeScreen> {
   // ============================================================
 
   static const Color backgroundColor = Color(0xFFF0F6FF);
+
   static const Color primaryTextColor = Color(0xFF172B5B);
+
   static const Color secondaryTextColor = Color(0xFF52627A);
+
   static const Color primaryBlue = Color(0xFF1565E8);
+
   static const Color lightBlue = Color(0xFF42A5F5);
-  static const Color purpleColor = Color.fromARGB(255, 106, 60, 163);
+
+  static const Color purpleColor =
+      Color.fromARGB(255, 106, 60, 163);
 
   // ============================================================
-  // Navigation
+  // Open Class Management
   // ============================================================
 
   Future<void> openClassManagement() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ClassManagementScreen()),
+      MaterialPageRoute(
+        builder: (context) =>
+            const ClassManagementScreen(),
+      ),
+    );
+  }
+
+  // ============================================================
+  // Open Class List
+  // ============================================================
+
+  Future<void> openClassList() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            const ClassListScreen(),
+      ),
     );
   }
 
@@ -39,10 +63,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final MediaQueryData mediaQuery = MediaQuery.of(context);
+    final MediaQueryData mediaQuery =
+        MediaQuery.of(context);
 
-    final double screenWidth = mediaQuery.size.width;
-    final double screenHeight = mediaQuery.size.height;
+    final double screenWidth =
+        mediaQuery.size.width;
+
+    final double screenHeight =
+        mediaQuery.size.height;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -50,17 +78,24 @@ class _HomeScreenState extends State<HomeScreen> {
       // ========================================================
       // AppBar
       // ========================================================
+
       appBar: _buildAppBar(),
 
       // ========================================================
       // Body
       // ========================================================
-      body: _buildBody(screenWidth: screenWidth, screenHeight: screenHeight),
+
+      body: _buildBody(
+        screenWidth: screenWidth,
+        screenHeight: screenHeight,
+      ),
 
       // ========================================================
       // Bottom Navigation
       // ========================================================
-      bottomNavigationBar: _buildBottomNavigationBar(),
+
+      bottomNavigationBar:
+          _buildBottomNavigationBar(),
     );
   }
 
@@ -71,18 +106,30 @@ class _HomeScreenState extends State<HomeScreen> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: backgroundColor,
+
       elevation: 0,
+
+      surfaceTintColor: Colors.transparent,
+
       title: const Text(''),
 
       leading: IconButton(
         onPressed: () {},
-        icon: const Icon(Icons.menu, color: primaryTextColor),
+
+        icon: const Icon(
+          Icons.menu,
+          color: primaryTextColor,
+        ),
       ),
 
       actions: [
         IconButton(
           onPressed: () {},
-          icon: const Icon(Icons.person, color: primaryTextColor),
+
+          icon: const Icon(
+            Icons.person,
+            color: primaryTextColor,
+          ),
         ),
       ],
     );
@@ -99,39 +146,69 @@ class _HomeScreenState extends State<HomeScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Image
+
+          // ====================================================
+          // Header Image
+          // ====================================================
+
           _buildHeaderImage(
             screenWidth: screenWidth,
             screenHeight: screenHeight,
           ),
 
-          SizedBox(height: screenHeight * 0.018),
+          SizedBox(
+            height: screenHeight * 0.018,
+          ),
 
+          // ====================================================
           // Title
-          _buildTitle(screenWidth: screenWidth),
+          // ====================================================
 
-          SizedBox(height: screenHeight * 0.01),
+          _buildTitle(
+            screenWidth: screenWidth,
+          ),
 
+          SizedBox(
+            height: screenHeight * 0.01,
+          ),
+
+          // ====================================================
           // Description
-          _buildDescription(screenWidth: screenWidth),
+          // ====================================================
 
-          SizedBox(height: screenHeight * 0.03),
+          _buildDescription(
+            screenWidth: screenWidth,
+          ),
 
+          SizedBox(
+            height: screenHeight * 0.03,
+          ),
+
+          // ====================================================
           // Create Class Button
+          // ====================================================
+
           _buildCreateClassButton(
             screenWidth: screenWidth,
             screenHeight: screenHeight,
           ),
 
-          SizedBox(height: screenHeight * 0.018),
+          SizedBox(
+            height: screenHeight * 0.018,
+          ),
 
+          // ====================================================
           // Class List Card
+          // ====================================================
+
           _buildClassListCard(
             screenWidth: screenWidth,
             screenHeight: screenHeight,
           ),
 
-          SizedBox(height: screenHeight * 0.02),
+          SizedBox(
+            height: screenHeight * 0.02,
+          ),
         ],
       ),
     );
@@ -147,8 +224,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     return Image.asset(
       'assets/images/photo_1.jpg',
+
       width: screenWidth,
+
       height: screenHeight * 0.44,
+
       fit: BoxFit.cover,
     );
   }
@@ -157,13 +237,21 @@ class _HomeScreenState extends State<HomeScreen> {
   // Title
   // ============================================================
 
-  Widget _buildTitle({required double screenWidth}) {
+  Widget _buildTitle({
+    required double screenWidth,
+  }) {
     return Text(
       'مدیریت و ایجاد صنف',
+
       textDirection: TextDirection.rtl,
+
+      textAlign: TextAlign.center,
+
       style: GoogleFonts.notoSansArabic(
         fontSize: screenWidth * 0.055,
+
         fontWeight: FontWeight.bold,
+
         color: primaryTextColor,
       ),
     );
@@ -173,15 +261,24 @@ class _HomeScreenState extends State<HomeScreen> {
   // Description
   // ============================================================
 
-  Widget _buildDescription({required double screenWidth}) {
+  Widget _buildDescription({
+    required double screenWidth,
+  }) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.07),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.07,
+      ),
+
       child: Text(
         'برای ایجاد و مدیریت صنف خود از گزینه زیر استفاده کنید.',
+
         textAlign: TextAlign.center,
+
         textDirection: TextDirection.rtl,
+
         style: GoogleFonts.notoSansArabic(
           fontSize: screenWidth * 0.037,
+
           color: secondaryTextColor,
         ),
       ),
@@ -198,53 +295,92 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     return GestureDetector(
       onTap: openClassManagement,
+
       child: Container(
         width: screenWidth * 0.7,
+
         height: screenHeight * 0.065,
 
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [lightBlue, primaryBlue],
+            colors: [
+              lightBlue,
+              primaryBlue,
+            ],
+
             begin: Alignment.centerLeft,
+
             end: Alignment.centerRight,
           ),
-          borderRadius: BorderRadius.circular(30),
+
+          borderRadius:
+              BorderRadius.circular(30),
+
           boxShadow: [
             BoxShadow(
-              color: primaryBlue.withOpacity(0.25),
+              color:
+                  primaryBlue.withOpacity(0.25),
+
               blurRadius: 18,
+
               offset: const Offset(0, 8),
             ),
           ],
         ),
 
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+
           children: [
+
+            // ==================================================
             // Add Icon
+            // ==================================================
+
             Container(
               width: screenWidth * 0.12,
+
               height: screenWidth * 0.12,
-              decoration: const BoxDecoration(
+
+              decoration:
+                  const BoxDecoration(
                 color: Colors.white,
+
                 shape: BoxShape.circle,
               ),
+
               child: Icon(
                 Icons.add_rounded,
+
                 size: screenWidth * 0.075,
+
                 color: primaryBlue,
               ),
             ),
 
-            SizedBox(width: screenWidth * 0.035),
+            SizedBox(
+              width: screenWidth * 0.035,
+            ),
 
+            // ==================================================
             // Button Text
+            // ==================================================
+
             Text(
               'ایجاد صنف جدید',
-              textDirection: TextDirection.rtl,
-              style: GoogleFonts.notoSansArabic(
-                fontSize: screenWidth * 0.045,
-                fontWeight: FontWeight.w700,
+
+              textDirection:
+                  TextDirection.rtl,
+
+              style:
+                  GoogleFonts.notoSansArabic(
+                fontSize:
+                    screenWidth * 0.045,
+
+                fontWeight:
+                    FontWeight.w700,
+
                 color: Colors.white,
               ),
             ),
@@ -262,78 +398,154 @@ class _HomeScreenState extends State<HomeScreen> {
     required double screenWidth,
     required double screenHeight,
   }) {
-    return Container(
-      width: screenWidth * 0.9,
-      height: screenHeight * 0.13,
+    return GestureDetector(
 
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.black, width: 0.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      // ========================================================
+      // مهم:
+      // با کلیک روی این کانتینر صفحه لیست صنوف باز می‌شود.
+      // ========================================================
 
-      child: Row(
-        children: [
-          // ======================================================
-          // Icon
-          // ======================================================
+      onTap: openClassList,
 
-          Padding(
-            padding: EdgeInsets.only(
-              left: screenWidth * 0.05,
-              right: screenWidth * 0.04,
-            ),
-            child: Icon(
-              Icons.article_rounded,
-              color: purpleColor,
-              size: screenWidth * 0.11,
-            ),
+      child: Container(
+        width: screenWidth * 0.9,
+
+        height: screenHeight * 0.13,
+
+        decoration: BoxDecoration(
+          color: Colors.white,
+
+          borderRadius:
+              BorderRadius.circular(15),
+
+          border: Border.all(
+            color: Colors.black,
+            width: 0.5,
           ),
 
-          // ======================================================
-          // Text
-          // ======================================================
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(right: screenWidth * 0.05),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'لیست صنوف',
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.notoSansArabic(
-                      fontSize: screenWidth * 0.045,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  Colors.black.withOpacity(0.08),
 
-                  SizedBox(height: screenHeight * 0.008),
+              blurRadius: 10,
 
-                  Text(
-                    'مشاهده و مدیریت صنوف ثبت شده',
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.notoSansArabic(
-                      fontSize: screenWidth * 0.027,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+
+        child: Row(
+          children: [
+
+            // ==================================================
+            // Icon
+            // ==================================================
+
+            Padding(
+              padding: EdgeInsets.only(
+                left: screenWidth * 0.05,
+
+                right: screenWidth * 0.04,
+              ),
+
+              child: Icon(
+                Icons.article_rounded,
+
+                color: purpleColor,
+
+                size: screenWidth * 0.11,
               ),
             ),
-          ),
-        ],
+
+            // ==================================================
+            // Text
+            // ==================================================
+
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  right: screenWidth * 0.03,
+                ),
+
+                child: Column(
+                  mainAxisAlignment:
+                      MainAxisAlignment.center,
+
+                  crossAxisAlignment:
+                      CrossAxisAlignment.end,
+
+                  children: [
+
+                    Text(
+                      'لیست صنوف',
+
+                      textDirection:
+                          TextDirection.rtl,
+
+                      textAlign:
+                          TextAlign.right,
+
+                      style:
+                          GoogleFonts.notoSansArabic(
+                        fontSize:
+                            screenWidth * 0.045,
+
+                        fontWeight:
+                            FontWeight.bold,
+
+                        color: Colors.black,
+                      ),
+                    ),
+
+                    SizedBox(
+                      height:
+                          screenHeight * 0.008,
+                    ),
+
+                    Text(
+                      'مشاهده و مدیریت صنوف ثبت شده',
+
+                      textDirection:
+                          TextDirection.rtl,
+
+                      textAlign:
+                          TextAlign.right,
+
+                      style:
+                          GoogleFonts.notoSansArabic(
+                        fontSize:
+                            screenWidth * 0.027,
+
+                        color:
+                            Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ==================================================
+            // Arrow
+            // ==================================================
+
+            Padding(
+              padding: EdgeInsets.only(
+                right: screenWidth * 0.025,
+              ),
+
+              child: Icon(
+                Icons
+                    .arrow_forward_ios_rounded,
+
+                size: screenWidth * 0.045,
+
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -345,20 +557,39 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBottomNavigationBar() {
     return BottomNavigationBar(
       currentIndex: 0,
-      selectedItemColor: purpleColor,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
+
+      selectedItemColor:
+          purpleColor,
+
+      unselectedItemColor:
+          Colors.grey,
+
+      type:
+          BottomNavigationBarType.fixed,
 
       items: const [
+
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
+          icon: Icon(
+            Icons.home_outlined,
+          ),
+
+          activeIcon: Icon(
+            Icons.home,
+          ),
+
           label: 'خانه',
         ),
 
         BottomNavigationBarItem(
-          icon: Icon(Icons.output_outlined),
-          activeIcon: Icon(Icons.output),
+          icon: Icon(
+            Icons.output_outlined,
+          ),
+
+          activeIcon: Icon(
+            Icons.output,
+          ),
+
           label: 'خروجی',
         ),
       ],
