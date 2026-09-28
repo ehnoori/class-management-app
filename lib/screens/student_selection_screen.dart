@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../database/isar_service.dart';
 import '../models/class_model.dart';
 import 'evaluation_screen.dart';
-
 import 'evaluation_results_screen.dart';
+import 'home_screen.dart';
 
 class StudentSelectionScreen extends StatefulWidget {
   final ClassModel classModel;
@@ -17,6 +17,10 @@ class StudentSelectionScreen extends StatefulWidget {
 }
 
 class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
+  // ==================================================
+  // Variables
+  // ==================================================
+
   int? selectedIndex;
 
   /// نام شاگردانی که ارزیابی شده‌اند
@@ -39,23 +43,33 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   // ==================================================
 
   Future<void> _loadEvaluatedStudents() async {
-    final evaluations = await IsarService.getClassEvaluations(
-      widget.classModel.id,
-    );
+    try {
+      final evaluations = await IsarService.getClassEvaluations(
+        widget.classModel.id,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      evaluatedStudents = evaluations
-          .map((evaluation) => evaluation.studentName)
-          .toSet();
+      setState(() {
+        evaluatedStudents = evaluations
+            .map((evaluation) => evaluation.studentName)
+            .toSet();
 
-      isLoading = false;
-    });
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
+      _showMessage('خطا در دریافت اطلاعات ارزیابی');
+    }
   }
 
   // ==================================================
-  // Continue
+  // Continue to evaluation
   // ==================================================
 
   Future<void> continueToQuestions() async {
@@ -95,13 +109,17 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
       // اگر تمام شاگردان ارزیابی شده باشند
       if (evaluatedStudents.length == widget.classModel.members.length) {
-        _showMessage('ارزیابی تمام شاگردان تکمیل شد');
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (!mounted) return;
+
+          _showMessage('ارزیابی تمام شاگردان تکمیل شد');
+        });
       }
     }
   }
 
   // ==================================================
-  // Results
+  // Open results
   // ==================================================
 
   void openResults() {
@@ -115,15 +133,47 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   }
 
   // ==================================================
+  // Export Excel
+  // ==================================================
+
+  void exportToExcel() {
+    if (evaluatedStudents.isEmpty) {
+      _showMessage('هنوز هیچ ارزیابی‌ای برای خروجی وجود ندارد');
+      return;
+    }
+
+    // فعلاً فقط پیام نمایش داده می‌شود.
+    // بعداً سرویس Excel به این قسمت متصل می‌شود.
+    _showMessage('خروجی اکسل آماده می‌شود...');
+  }
+
+  // ==================================================
+  // Go to Home
+  // ==================================================
+
+  void goToHome() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      (route) => false,
+    );
+  }
+
+  // ==================================================
   // Message
   // ==================================================
 
   void _showMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           message,
           textDirection: TextDirection.rtl,
+          textAlign: TextAlign.right,
           style: GoogleFonts.notoSansArabic(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -161,7 +211,6 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-
         leading: Padding(
           padding: const EdgeInsets.only(left: 8),
           child: IconButton(
@@ -181,7 +230,6 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
             ),
           ),
         ),
-
         title: Text(
           'انتخاب شاگرد',
           style: GoogleFonts.notoSansArabic(
@@ -205,10 +253,17 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
           ),
           child: Column(
             children: [
+              // ==================================================
+              // Header
+              // ==================================================
+
               _buildHeader(students.length),
 
               const SizedBox(height: 18),
 
+              // ==================================================
+              // Students
+              // ==================================================
               if (isLoading)
                 const Expanded(
                   child: Center(
@@ -233,20 +288,41 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
               const SizedBox(height: 12),
 
-              // دکمه ادامه
+              // ==================================================
+              // Start Evaluation
+              // ==================================================
               _buildContinueButton(),
 
               const SizedBox(height: 10),
 
-              // دکمه نتایج
+              // ==================================================
+              // Results
+              // ==================================================
               _buildResultsButton(enabled: evaluatedStudents.isNotEmpty),
 
-              // اگر همه تکمیل شده باشند
+              const SizedBox(height: 12),
+
+              // ==================================================
+              // Excel
+              // ==================================================
+              _buildExcelButton(enabled: evaluatedStudents.isNotEmpty),
+
+              const SizedBox(height: 8),
+
+              // ==================================================
+              // Home
+              // ==================================================
+              _buildHomeButton(),
+
+              // ==================================================
+              // Completed Message
+              // ==================================================
               if (allCompleted) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
                   'ارزیابی تمام شاگردان تکمیل شده است',
                   textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.notoSansArabic(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -289,6 +365,7 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
       child: Row(
         textDirection: TextDirection.rtl,
         children: [
+          // Icon
           Container(
             width: 55,
             height: 55,
@@ -305,6 +382,7 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
           const SizedBox(width: 14),
 
+          // Text
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -356,6 +434,7 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
   Widget _buildStudentItem({required String name, required int index}) {
     final bool isSelected = selectedIndex == index;
+
     final bool isEvaluated = evaluatedStudents.contains(name);
 
     return Container(
@@ -381,7 +460,6 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(19),
-
         onTap: isEvaluated
             ? null
             : () {
@@ -389,7 +467,6 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                   selectedIndex = index;
                 });
               },
-
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
@@ -527,9 +604,7 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
       height: 58,
       child: ElevatedButton.icon(
         onPressed: enabled ? continueToQuestions : null,
-
         icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-
         label: Text(
           'شروع ارزیابی',
           textDirection: TextDirection.rtl,
@@ -539,7 +614,6 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
             color: Colors.white,
           ),
         ),
-
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1565E8),
           disabledBackgroundColor: const Color(0xFFB7C9E8),
@@ -559,28 +633,95 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   Widget _buildResultsButton({required bool enabled}) {
     return SizedBox(
       width: double.infinity,
-      height: 52,
-      child: OutlinedButton.icon(
+      height: 56,
+      child: ElevatedButton.icon(
         onPressed: enabled ? openResults : null,
-
-        icon: const Icon(Icons.assessment_rounded),
-
+        icon: const Icon(Icons.analytics_rounded, color: Colors.white),
         label: Text(
           'مشاهده نتایج',
           textDirection: TextDirection.rtl,
           style: GoogleFonts.notoSansArabic(
             fontSize: 14,
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
-
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF1565E8),
-          disabledForegroundColor: const Color(0xFFB7C9E8),
-          side: const BorderSide(color: Color(0xFFB7C9E8)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF239B56),
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFFB9DFC7),
+          disabledForegroundColor: Colors.white,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(17),
           ),
+        ),
+      ),
+    );
+  }
+
+  // ==================================================
+  // Excel Button
+  // ==================================================
+
+  Widget _buildExcelButton({required bool enabled}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton.icon(
+        onPressed: enabled ? exportToExcel : null,
+        icon: const Icon(Icons.table_view_rounded, color: Colors.white),
+        label: Text(
+          'خروجی به اکسل',
+          textDirection: TextDirection.rtl,
+          style: GoogleFonts.notoSansArabic(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFE74C3C),
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFFE8B4AF),
+          disabledForegroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(17),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ==================================================
+  // Home Button
+  // ==================================================
+
+  Widget _buildHomeButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: OutlinedButton.icon(
+        onPressed: goToHome,
+        icon: const Icon(Icons.home_rounded, color: Color(0xFF172B5B)),
+        label: Text(
+          'بازگشت به صفحه اصلی',
+          textDirection: TextDirection.rtl,
+          style: GoogleFonts.notoSansArabic(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF172B5B),
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF172B5B),
+          backgroundColor: Colors.white,
+          side: const BorderSide(color: Color(0xFFD5DEEB), width: 1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(17),
+          ),
+          elevation: 0,
         ),
       ),
     );

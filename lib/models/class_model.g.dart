@@ -22,9 +22,9 @@ const ClassModelSchema = CollectionSchema(
       name: r'className',
       type: IsarType.string,
     ),
-    r'classType': PropertySchema(
+    r'classTime': PropertySchema(
       id: 1,
-      name: r'classType',
+      name: r'classTime',
       type: IsarType.string,
     ),
     r'members': PropertySchema(
@@ -59,7 +59,7 @@ int _classModelEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.className.length * 3;
-  bytesCount += 3 + object.classType.length * 3;
+  bytesCount += 3 + object.classTime.length * 3;
   bytesCount += 3 + object.members.length * 3;
   {
     for (var i = 0; i < object.members.length; i++) {
@@ -78,7 +78,7 @@ void _classModelSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.className);
-  writer.writeString(offsets[1], object.classType);
+  writer.writeString(offsets[1], object.classTime);
   writer.writeStringList(offsets[2], object.members);
   writer.writeString(offsets[3], object.teacherName);
 }
@@ -91,7 +91,7 @@ ClassModel _classModelDeserialize(
 ) {
   final object = ClassModel();
   object.className = reader.readString(offsets[0]);
-  object.classType = reader.readString(offsets[1]);
+  object.classTime = reader.readString(offsets[1]);
   object.id = id;
   object.members = reader.readStringList(offsets[2]) ?? [];
   object.teacherName = reader.readString(offsets[3]);
@@ -343,13 +343,13 @@ extension ClassModelQueryFilter
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeEqualTo(
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTimeEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'classType',
+        property: r'classTime',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -357,7 +357,7 @@ extension ClassModelQueryFilter
   }
 
   QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
-      classTypeGreaterThan(
+      classTimeGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -365,14 +365,14 @@ extension ClassModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'classType',
+        property: r'classTime',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeLessThan(
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTimeLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -380,14 +380,14 @@ extension ClassModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'classType',
+        property: r'classTime',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeBetween(
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTimeBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -396,7 +396,7 @@ extension ClassModelQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'classType',
+        property: r'classTime',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -407,50 +407,50 @@ extension ClassModelQueryFilter
   }
 
   QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
-      classTypeStartsWith(
+      classTimeStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'classType',
+        property: r'classTime',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeEndsWith(
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTimeEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'classType',
+        property: r'classTime',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeContains(
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTimeContains(
       String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'classType',
+        property: r'classTime',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTypeMatches(
+  QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition> classTimeMatches(
       String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'classType',
+        property: r'classTime',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -458,20 +458,20 @@ extension ClassModelQueryFilter
   }
 
   QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
-      classTypeIsEmpty() {
+      classTimeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'classType',
+        property: r'classTime',
         value: '',
       ));
     });
   }
 
   QueryBuilder<ClassModel, ClassModel, QAfterFilterCondition>
-      classTypeIsNotEmpty() {
+      classTimeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'classType',
+        property: r'classTime',
         value: '',
       ));
     });
@@ -911,15 +911,15 @@ extension ClassModelQuerySortBy
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByClassType() {
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByClassTime() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'classType', Sort.asc);
+      return query.addSortBy(r'classTime', Sort.asc);
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByClassTypeDesc() {
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> sortByClassTimeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'classType', Sort.desc);
+      return query.addSortBy(r'classTime', Sort.desc);
     });
   }
 
@@ -950,15 +950,15 @@ extension ClassModelQuerySortThenBy
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByClassType() {
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByClassTime() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'classType', Sort.asc);
+      return query.addSortBy(r'classTime', Sort.asc);
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByClassTypeDesc() {
+  QueryBuilder<ClassModel, ClassModel, QAfterSortBy> thenByClassTimeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'classType', Sort.desc);
+      return query.addSortBy(r'classTime', Sort.desc);
     });
   }
 
@@ -996,10 +996,10 @@ extension ClassModelQueryWhereDistinct
     });
   }
 
-  QueryBuilder<ClassModel, ClassModel, QDistinct> distinctByClassType(
+  QueryBuilder<ClassModel, ClassModel, QDistinct> distinctByClassTime(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'classType', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'classTime', caseSensitive: caseSensitive);
     });
   }
 
@@ -1031,9 +1031,9 @@ extension ClassModelQueryProperty
     });
   }
 
-  QueryBuilder<ClassModel, String, QQueryOperations> classTypeProperty() {
+  QueryBuilder<ClassModel, String, QQueryOperations> classTimeProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'classType');
+      return query.addPropertyName(r'classTime');
     });
   }
 

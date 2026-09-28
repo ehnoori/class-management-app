@@ -10,7 +10,7 @@ class ClassModel {
 
   late String teacherName;
 
-  late String classType;
+  String classTime = '';
 
-  late List<String> members;
+  List<String> members = [];
 }

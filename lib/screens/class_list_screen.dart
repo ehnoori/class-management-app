@@ -13,9 +13,20 @@ class ClassListScreen extends StatefulWidget {
 }
 
 class _ClassListScreenState extends State<ClassListScreen> {
+  // ============================================================
+  // Variables
+  // ============================================================
+
   List<ClassModel> classes = [];
 
   bool isLoading = true;
+
+  // ذخیره وضعیت باز یا بسته بودن اعضای هر صنف
+  final Set<int> expandedClasses = {};
+
+  // ============================================================
+  // Init
+  // ============================================================
 
   @override
   void initState() {
@@ -24,14 +35,14 @@ class _ClassListScreenState extends State<ClassListScreen> {
   }
 
   // ============================================================
-  // دریافت تمام صنوف از Isar
+  // دریافت صنوف از Isar
   // ============================================================
 
   Future<void> _loadClasses() async {
     try {
-   final isar = await IsarService.getInstance();
+      final isar = await IsarService.getInstance();
 
-final result = await isar.classModels.where().findAll();
+      final result = await isar.classModels.where().findAll();
 
       if (!mounted) return;
 
@@ -58,6 +69,24 @@ final result = await isar.classModels.where().findAll();
     await _loadClasses();
   }
 
+  // ============================================================
+  // باز / بسته کردن اعضای صنف
+  // ============================================================
+
+  void _toggleMembers(int classId) {
+    setState(() {
+      if (expandedClasses.contains(classId)) {
+        expandedClasses.remove(classId);
+      } else {
+        expandedClasses.add(classId);
+      }
+    });
+  }
+
+  // ============================================================
+  // Build
+  // ============================================================
+late String classTime;
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -72,6 +101,7 @@ final result = await isar.classModels.where().findAll();
       // ========================================================
       // AppBar
       // ========================================================
+
       appBar: AppBar(
         backgroundColor: backgroundColor,
         elevation: 0,
@@ -112,40 +142,40 @@ final result = await isar.classModels.where().findAll();
       // ========================================================
       // Body
       // ========================================================
+
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: screenWidth * 0.05,
             vertical: screenHeight * 0.015,
           ),
-
           child: isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: purpleColor),
+                  child: CircularProgressIndicator(
+                    color: purpleColor,
+                  ),
                 )
               : classes.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  color: purpleColor,
-                  onRefresh: _refreshClasses,
+                  ? _buildEmptyState()
+                  : RefreshIndicator(
+                      color: purpleColor,
+                      onRefresh: _refreshClasses,
+                      child: ListView.builder(
+                        physics:
+                            const AlwaysScrollableScrollPhysics(),
+                        itemCount: classes.length,
+                        itemBuilder: (context, index) {
+                          final classModel = classes[index];
 
-                  child: ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-
-                    itemCount: classes.length,
-
-                    itemBuilder: (context, index) {
-                      final classModel = classes[index];
-
-                      return _buildClassCard(
-                        classModel,
-                        screenWidth,
-                        screenHeight,
-                        purpleColor,
-                      );
-                    },
-                  ),
-                ),
+                          return _buildClassCard(
+                            classModel,
+                            screenWidth,
+                            screenHeight,
+                            purpleColor,
+                          );
+                        },
+                      ),
+                    ),
         ),
       ),
     );
@@ -161,18 +191,26 @@ final result = await isar.classModels.where().findAll();
     double screenHeight,
     Color purpleColor,
   ) {
+    final bool isExpanded =
+        expandedClasses.contains(classModel.id);
+
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.only(bottom: screenHeight * 0.018),
-      padding: EdgeInsets.all(screenWidth * 0.045),
+
+      margin: EdgeInsets.only(
+        bottom: screenHeight * 0.018,
+      ),
+
+      padding: EdgeInsets.all(
+        screenWidth * 0.045,
+      ),
 
       decoration: BoxDecoration(
         color: Colors.white,
-
         borderRadius: BorderRadius.circular(22),
-
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-
+        border: Border.all(
+          color: const Color(0xFFE2E8F0),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.035),
@@ -185,23 +223,21 @@ final result = await isar.classModels.where().findAll();
       child: Column(
         children: [
           // ====================================================
-          // Header
+          // Header - نام صنف
           // ====================================================
 
           Row(
             textDirection: TextDirection.rtl,
-
             children: [
-              // Icon
+              // آیکون صنف
               Container(
                 width: screenWidth * 0.14,
                 height: screenWidth * 0.14,
-
                 decoration: BoxDecoration(
                   color: const Color(0xFFEDE7FF),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius:
+                      BorderRadius.circular(16),
                 ),
-
                 child: Icon(
                   Icons.school_rounded,
                   color: purpleColor,
@@ -209,38 +245,48 @@ final result = await isar.classModels.where().findAll();
                 ),
               ),
 
-              SizedBox(width: screenWidth * 0.035),
+              SizedBox(
+                width: screenWidth * 0.035,
+              ),
 
-              // Name
+              // نام صنف
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-
+                child: Wrap(
+                  textDirection: TextDirection.rtl,
+                  crossAxisAlignment:
+                      WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 4,
                   children: [
+                    // عنوان
                     Text(
-                      classModel.className,
-                      textDirection: TextDirection.rtl,
-                      textAlign: TextAlign.right,
-
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-
-                      style: GoogleFonts.notoSansArabic(
-                        fontSize: screenWidth * 0.045,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF172B5B),
+                      'نام صنف:',
+                      textDirection:
+                          TextDirection.rtl,
+                      style:
+                          GoogleFonts.notoSansArabic(
+                        fontSize: 15,
+                        fontWeight:
+                            FontWeight.bold,
+                        color: const Color(
+                          0xFF172B5B,
+                        ),
                       ),
                     ),
 
-                    const SizedBox(height: 5),
-
+                    // نام وارد شده
                     Text(
-                      'نام صنف',
-                      textDirection: TextDirection.rtl,
-
-                      style: GoogleFonts.notoSansArabic(
-                        fontSize: screenWidth * 0.027,
-                        color: const Color(0xFF8A98AB),
+                      classModel.className,
+                      textDirection:
+                          TextDirection.rtl,
+                      style:
+                          GoogleFonts.notoSansArabic(
+                        fontSize: 12,
+                        fontWeight:
+                            FontWeight.normal,
+                        color: const Color(
+                          0xFF26364D,
+                        ),
                       ),
                     ),
                   ],
@@ -249,206 +295,383 @@ final result = await isar.classModels.where().findAll();
             ],
           ),
 
-          SizedBox(height: screenHeight * 0.018),
+          SizedBox(
+            height: screenHeight * 0.018,
+          ),
 
           // ====================================================
-          // Teacher
+          // استاد
           // ====================================================
+
           _buildInfoRow(
             icon: Icons.person_rounded,
             title: 'استاد',
             value: classModel.teacherName,
             iconColor: const Color(0xFF1565E8),
-            backgroundColor: const Color(0xFFE6F0FF),
+            backgroundColor:
+                const Color(0xFFE6F0FF),
             screenWidth: screenWidth,
           ),
+const SizedBox(height: 10),
 
+_buildInfoRow(
+  icon: Icons.access_time_rounded,
+  title: 'تایم درسی',
+  value: classModel.classTime,
+  iconColor: const Color(0xFF8E44AD),
+  backgroundColor: const Color(0xFFF0E5F7),
+  screenWidth: screenWidth,
+),
           const SizedBox(height: 10),
 
           // ====================================================
-          // Class Type
+          // تعداد اعضا
           // ====================================================
-          _buildInfoRow(
-            icon: Icons.category_rounded,
-            title: 'نوع صنف',
-            value: classModel.classType,
-            iconColor: const Color(0xFF7C4DFF),
-            backgroundColor: const Color(0xFFEDE7FF),
-            screenWidth: screenWidth,
-          ),
 
-          const SizedBox(height: 10),
-
-          // ====================================================
-          // Members Count
-          // ====================================================
           _buildInfoRow(
             icon: Icons.groups_rounded,
             title: 'تعداد اعضا',
-            value: '${classModel.members.length} نفر',
+            value:
+                '${classModel.members.length} نفر',
             iconColor: const Color(0xFF239B56),
-            backgroundColor: const Color(0xFFDDF3E5),
+            backgroundColor:
+                const Color(0xFFDDF3E5),
             screenWidth: screenWidth,
           ),
 
           const SizedBox(height: 15),
 
           // ====================================================
-          // Members Title
+          // دکمه اعضای صنف
           // ====================================================
-          Container(
-            width: double.infinity,
 
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          InkWell(
+            borderRadius:
+                BorderRadius.circular(14),
 
-            decoration: BoxDecoration(
-              color: const Color(0xFFF7F9FC),
-              borderRadius: BorderRadius.circular(13),
-            ),
+            onTap: () {
+              _toggleMembers(classModel.id);
+            },
 
-            child: Row(
-              textDirection: TextDirection.rtl,
+            child: AnimatedContainer(
+              duration:
+                  const Duration(milliseconds: 250),
 
-              children: [
-                const Icon(
-                  Icons.people_alt_rounded,
-                  size: 19,
-                  color: Color(0xFF1565E8),
+              width: double.infinity,
+
+              padding:
+                  const EdgeInsets.symmetric(
+                vertical: 12,
+                horizontal: 13,
+              ),
+
+              decoration: BoxDecoration(
+                color: isExpanded
+                    ? const Color(0xFFEDE7FF)
+                    : const Color(0xFFF7F9FC),
+
+                borderRadius:
+                    BorderRadius.circular(14),
+
+                border: Border.all(
+                  color: isExpanded
+                      ? const Color(0xFFD9CCFF)
+                      : const Color(0xFFE8EDF4),
                 ),
+              ),
 
-                const SizedBox(width: 8),
+              child: Row(
+                textDirection:
+                    TextDirection.rtl,
 
-                Text(
-                  'اعضای صنف',
-                  textDirection: TextDirection.rtl,
+                children: [
+                  // =================================================
+                  // آیکون اعضا
+                  // =================================================
 
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF172B5B),
+                  Container(
+                    width: 36,
+                    height: 36,
+
+                    decoration: BoxDecoration(
+                      color: isExpanded
+                          ? Colors.white
+                          : const Color(
+                              0xFFE6F0FF,
+                            ),
+                      borderRadius:
+                          BorderRadius.circular(10),
+                    ),
+
+                    child: Icon(
+                      Icons.people_alt_rounded,
+                      size: 19,
+                      color: isExpanded
+                          ? const Color(
+                              0xFF7C4DFF,
+                            )
+                          : const Color(
+                              0xFF1565E8,
+                            ),
+                    ),
                   ),
-                ),
 
-                const Spacer(),
+                  const SizedBox(width: 10),
 
-                Text(
-                  '${classModel.members.length} نفر',
-                  textDirection: TextDirection.rtl,
+                  // =================================================
+                  // عنوان اعضای صنف + تعداد
+                  // =================================================
 
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF7C8DA8),
+                  Expanded(
+                    child: Wrap(
+                      textDirection:
+                          TextDirection.rtl,
+                      crossAxisAlignment:
+                          WrapCrossAlignment.center,
+                      spacing: 6,
+                      runSpacing: 2,
+                      children: [
+                        // عنوان
+                        Text(
+                          'اعضای صنف:',
+                          textDirection:
+                              TextDirection.rtl,
+                          style:
+                              GoogleFonts.notoSansArabic(
+                            fontSize: 15,
+                            fontWeight:
+                                FontWeight.bold,
+                            color: const Color(
+                              0xFF172B5B,
+                            ),
+                          ),
+                        ),
+
+                        // تعداد
+                        Text(
+                          '${classModel.members.length} نفر',
+                          textDirection:
+                              TextDirection.rtl,
+                          style:
+                              GoogleFonts.notoSansArabic(
+                            fontSize: 12,
+                            fontWeight:
+                                FontWeight.normal,
+                            color: const Color(
+                              0xFF7C8DA8,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+
+                  // =================================================
+                  // فلش باز / بسته
+                  // =================================================
+
+                  AnimatedRotation(
+                    duration:
+                        const Duration(
+                      milliseconds: 250,
+                    ),
+
+                    turns:
+                        isExpanded ? 0.5 : 0,
+
+                    child: const Icon(
+                      Icons
+                          .keyboard_arrow_down_rounded,
+                      size: 25,
+                      color:
+                          Color(0xFF7C4DFF),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
-          const SizedBox(height: 10),
+          // ====================================================
+          // Members List
+          // ====================================================
 
-          // ====================================================
-          // تمام اعضا
-          // ====================================================
-          if (classModel.members.isEmpty)
-            Container(
+          AnimatedCrossFade(
+            duration:
+                const Duration(milliseconds: 300),
+
+            crossFadeState: isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+
+            firstChild: const SizedBox(
               width: double.infinity,
+            ),
 
-              padding: const EdgeInsets.all(15),
+            secondChild: Padding(
+              padding:
+                  const EdgeInsets.only(top: 10),
+              child:
+                  _buildMembersList(classModel),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF5F5),
-                borderRadius: BorderRadius.circular(13),
+  // ============================================================
+  // Members List
+  // ============================================================
+
+  Widget _buildMembersList(
+    ClassModel classModel,
+  ) {
+    // ----------------------------------------------------------
+    // اگر عضو وجود نداشته باشد
+    // ----------------------------------------------------------
+
+    if (classModel.members.isEmpty) {
+      return Container(
+        width: double.infinity,
+
+        padding: const EdgeInsets.all(15),
+
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF5F5),
+          borderRadius:
+              BorderRadius.circular(13),
+        ),
+
+        child: Text(
+          'هیچ عضوی ثبت نشده است',
+          textDirection:
+              TextDirection.rtl,
+          textAlign: TextAlign.center,
+
+          style:
+              GoogleFonts.notoSansArabic(
+            fontSize: 12,
+            fontWeight:
+                FontWeight.normal,
+            color:
+                const Color(0xFFD94B4B),
+          ),
+        ),
+      );
+    }
+
+    // ----------------------------------------------------------
+    // لیست اعضا
+    // ----------------------------------------------------------
+
+    return Column(
+      children: List.generate(
+        classModel.members.length,
+        (index) {
+          final student =
+              classModel.members[index];
+
+          return Container(
+            width: double.infinity,
+
+            margin:
+                const EdgeInsets.only(
+              bottom: 7,
+            ),
+
+            padding:
+                const EdgeInsets.symmetric(
+              vertical: 10,
+              horizontal: 12,
+            ),
+
+            decoration: BoxDecoration(
+              color:
+                  const Color(0xFFFAFBFD),
+              borderRadius:
+                  BorderRadius.circular(12),
+              border: Border.all(
+                color:
+                    const Color(0xFFE8EDF4),
               ),
+            ),
 
-              child: Text(
-                'هیچ عضوی ثبت نشده است',
-                textDirection: TextDirection.rtl,
-                textAlign: TextAlign.center,
+            child: Row(
+              textDirection:
+                  TextDirection.rtl,
 
-                style: GoogleFonts.notoSansArabic(
-                  fontSize: 12,
-                  color: const Color(0xFFD94B4B),
-                ),
-              ),
-            )
-          else
-            Column(
-              children: List.generate(classModel.members.length, (index) {
-                final student = classModel.members[index];
+              children: [
+                // =================================================
+                // شماره
+                // =================================================
 
-                return Container(
-                  width: double.infinity,
-
-                  margin: const EdgeInsets.only(bottom: 7),
-
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 12,
-                  ),
+                Container(
+                  width: 29,
+                  height: 29,
+                  alignment:
+                      Alignment.center,
 
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFAFBFD),
-                    borderRadius: BorderRadius.circular(12),
-
-                    border: Border.all(color: const Color(0xFFE8EDF4)),
+                    color:
+                        const Color(0xFFE1EDFF),
+                    borderRadius:
+                        BorderRadius.circular(9),
                   ),
 
-                  child: Row(
-                    textDirection: TextDirection.rtl,
-
-                    children: [
-                      // شماره
-                      Container(
-                        width: 29,
-                        height: 29,
-
-                        alignment: Alignment.center,
-
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE1EDFF),
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-
-                        child: Text(
-                          '${index + 1}',
-
-                          style: GoogleFonts.notoSansArabic(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF1565E8),
-                          ),
-                        ),
+                  child: Text(
+                    '${index + 1}',
+                    style:
+                        GoogleFonts.notoSansArabic(
+                      fontSize: 15,
+                      fontWeight:
+                          FontWeight.bold,
+                      color:
+                          const Color(
+                        0xFF1565E8,
                       ),
-
-                      const SizedBox(width: 10),
-
-                      // نام شاگرد
-                      Expanded(
-                        child: Text(
-                          student,
-                          textDirection: TextDirection.rtl,
-                          textAlign: TextAlign.right,
-
-                          style: GoogleFonts.notoSansArabic(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF26364D),
-                          ),
-                        ),
-                      ),
-
-                      const Icon(
-                        Icons.person_outline_rounded,
-                        size: 18,
-                        color: Color(0xFF9AA8BA),
-                      ),
-                    ],
+                    ),
                   ),
-                );
-              }),
+                ),
+
+                const SizedBox(width: 10),
+
+                // =================================================
+                // نام شاگرد
+                // =================================================
+
+                Expanded(
+                  child: Text(
+                    student,
+                    textDirection:
+                        TextDirection.rtl,
+                    textAlign:
+                        TextAlign.right,
+
+                    style:
+                        GoogleFonts.notoSansArabic(
+                      fontSize: 12,
+                      fontWeight:
+                          FontWeight.normal,
+                      color:
+                          const Color(
+                        0xFF26364D,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const Icon(
+                  Icons
+                      .person_outline_rounded,
+                  size: 20,
+                  color:
+                      Color(0xFF9AA8BA),
+                ),
+              ],
             ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -468,58 +691,98 @@ final result = await isar.classModels.where().findAll();
     return Container(
       width: double.infinity,
 
-      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+      padding:
+          const EdgeInsets.symmetric(
+        vertical: 11,
+        horizontal: 12,
+      ),
 
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFD),
-        borderRadius: BorderRadius.circular(13),
+        borderRadius:
+            BorderRadius.circular(13),
       ),
 
       child: Row(
-        textDirection: TextDirection.rtl,
+        textDirection:
+            TextDirection.rtl,
 
         children: [
+          // =====================================================
+          // آیکون
+          // =====================================================
+
           Container(
             width: 34,
             height: 34,
 
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius:
+                  BorderRadius.circular(10),
             ),
 
-            child: Icon(icon, color: iconColor, size: 19),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 19,
+            ),
           ),
 
           const SizedBox(width: 10),
 
-          Text(
-            '$title:',
-            textDirection: TextDirection.rtl,
-
-            style: GoogleFonts.notoSansArabic(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF7C8DA8),
-            ),
-          ),
-
-          const SizedBox(width: 7),
+          // =====================================================
+          // عنوان + مقدار
+          // =====================================================
 
           Expanded(
-            child: Text(
-              value,
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.right,
+            child: Wrap(
+              textDirection:
+                  TextDirection.rtl,
 
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              crossAxisAlignment:
+                  WrapCrossAlignment.center,
 
-              style: GoogleFonts.notoSansArabic(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF26364D),
-              ),
+              spacing: 6,
+              runSpacing: 4,
+
+              children: [
+                // عنوان
+                Text(
+                  '$title:',
+                  textDirection:
+                      TextDirection.rtl,
+
+                  style:
+                      GoogleFonts.notoSansArabic(
+                    fontSize: 15,
+                    fontWeight:
+                        FontWeight.bold,
+                    color:
+                        const Color(
+                      0xFF172B5B,
+                    ),
+                  ),
+                ),
+
+                // مقدار وارد شده
+                Text(
+                  value,
+                  textDirection:
+                      TextDirection.rtl,
+
+                  style:
+                      GoogleFonts.notoSansArabic(
+                    fontSize: 12,
+                    fontWeight:
+                        FontWeight.normal,
+                    color:
+                        const Color(
+                      0xFF26364D,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -534,56 +797,92 @@ final result = await isar.classModels.where().findAll();
   Widget _buildEmptyState() {
     return Center(
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics:
+            const AlwaysScrollableScrollPhysics(),
 
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25),
+          padding:
+              const EdgeInsets.symmetric(
+            horizontal: 25,
+          ),
 
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment:
+                MainAxisAlignment.center,
 
             children: [
+              // =================================================
+              // آیکون
+              // =================================================
+
               Container(
                 width: 90,
                 height: 90,
 
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEDE7FF),
+                decoration:
+                    const BoxDecoration(
+                  color:
+                      Color(0xFFEDE7FF),
                   shape: BoxShape.circle,
                 ),
 
                 child: const Icon(
                   Icons.school_outlined,
                   size: 45,
-                  color: Color(0xFF7C4DFF),
+                  color:
+                      Color(0xFF7C4DFF),
                 ),
               ),
 
               const SizedBox(height: 20),
 
+              // =================================================
+              // عنوان
+              // =================================================
+
               Text(
                 'هنوز هیچ صنفی ثبت نشده است',
-                textDirection: TextDirection.rtl,
-                textAlign: TextAlign.center,
+                textDirection:
+                    TextDirection.rtl,
+                textAlign:
+                    TextAlign.center,
 
-                style: GoogleFonts.notoSansArabic(
+                style:
+                    GoogleFonts.notoSansArabic(
                   fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF172B5B),
+                  fontWeight:
+                      FontWeight.bold,
+                  color:
+                      const Color(
+                    0xFF172B5B,
+                  ),
                 ),
               ),
 
               const SizedBox(height: 8),
 
-              Text(
-                'بعد از ایجاد صنف، تمام اطلاعات آن در این صفحه نمایش داده می‌شود.',
-                textDirection: TextDirection.rtl,
-                textAlign: TextAlign.center,
+              // =================================================
+              // توضیحات
+              // =================================================
 
-                style: GoogleFonts.notoSansArabic(
+              Text(
+                'بعد از ایجاد صنف، تمام اطلاعات آن '
+                'در این صفحه نمایش داده می‌شود.',
+
+                textDirection:
+                    TextDirection.rtl,
+
+                textAlign:
+                    TextAlign.center,
+
+                style:
+                    GoogleFonts.notoSansArabic(
                   fontSize: 12,
                   height: 1.7,
-                  color: const Color(0xFF7C8DA8),
+                  color:
+                      const Color(
+                    0xFF7C8DA8,
+                  ),
                 ),
               ),
             ],
