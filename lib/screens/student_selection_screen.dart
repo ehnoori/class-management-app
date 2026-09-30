@@ -1,10 +1,16 @@
+import 'dart:io';
+
+import 'package:excel/excel.dart' hide Border;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../database/isar_service.dart';
 import '../models/class_model.dart';
-import 'evaluation_screen.dart';
+import '../models/evaluation_model.dart';
 import 'evaluation_results_screen.dart';
+import 'evaluation_screen.dart';
 import 'home_screen.dart';
 
 class StudentSelectionScreen extends StatefulWidget {
@@ -17,20 +23,21 @@ class StudentSelectionScreen extends StatefulWidget {
 }
 
 class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
-  // ==================================================
-  // Variables
-  // ==================================================
+  // ============================================================
+  // VARIABLES
+  // ============================================================
 
   int? selectedIndex;
 
-  /// نام شاگردانی که ارزیابی شده‌اند
   Set<String> evaluatedStudents = {};
 
   bool isLoading = true;
 
-  // ==================================================
-  // Init
-  // ==================================================
+  bool isExporting = false;
+
+  // ============================================================
+  // INIT
+  // ============================================================
 
   @override
   void initState() {
@@ -38,9 +45,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
     _loadEvaluatedStudents();
   }
 
-  // ==================================================
-  // Load evaluated students
-  // ==================================================
+  // ============================================================
+  // LOAD EVALUATED STUDENTS
+  // ============================================================
 
   Future<void> _loadEvaluatedStudents() async {
     try {
@@ -48,16 +55,25 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         widget.classModel.id,
       );
 
+      final Set<String> names = evaluations
+          .map((evaluation) => evaluation.studentName.trim())
+          .toSet();
+
+      debugPrint('Loaded evaluations: ${evaluations.length}');
+
+      debugPrint('Evaluated students: $names');
+
       if (!mounted) return;
 
       setState(() {
-        evaluatedStudents = evaluations
-            .map((evaluation) => evaluation.studentName)
-            .toSet();
-
+        evaluatedStudents = names;
         isLoading = false;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Load Evaluations Error: $e');
+
+      debugPrint('$stackTrace');
+
       if (!mounted) return;
 
       setState(() {
@@ -68,9 +84,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
     }
   }
 
-  // ==================================================
-  // Continue to evaluation
-  // ==================================================
+  // ============================================================
+  // START EVALUATION
+  // ============================================================
 
   Future<void> continueToQuestions() async {
     if (selectedIndex == null) {
@@ -78,10 +94,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
       return;
     }
 
-    final String selectedStudent = widget.classModel.members[selectedIndex!];
+    final String studentName = widget.classModel.members[selectedIndex!].trim();
 
-    // اگر قبلاً ارزیابی شده باشد
-    if (evaluatedStudents.contains(selectedStudent)) {
+    if (evaluatedStudents.contains(studentName)) {
       _showMessage('این شاگرد قبلاً ارزیابی شده است');
       return;
     }
@@ -89,658 +104,959 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EvaluationScreen(
+        builder: (_) => EvaluationScreen(
           classModel: widget.classModel,
-          studentName: selectedStudent,
+          studentName: studentName,
         ),
       ),
     );
 
-    if (!mounted) return;
+    if (result == true && mounted) {
+      await _loadEvaluatedStudents();
 
-    // بعد از ذخیره موفق نتیجه
-    if (result == true) {
+      if (!mounted) return;
+
       setState(() {
-        evaluatedStudents.add(selectedStudent);
         selectedIndex = null;
       });
-
-      _showMessage('ارزیابی $selectedStudent ذخیره شد');
-
-      // اگر تمام شاگردان ارزیابی شده باشند
-      if (evaluatedStudents.length == widget.classModel.members.length) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (!mounted) return;
-
-          _showMessage('ارزیابی تمام شاگردان تکمیل شد');
-        });
-      }
     }
   }
 
-  // ==================================================
-  // Open results
-  // ==================================================
+  // ============================================================
+  // RESULTS
+  // ============================================================
 
   void openResults() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            EvaluationResultsScreen(classModel: widget.classModel),
+        builder: (_) => EvaluationResultsScreen(classModel: widget.classModel),
       ),
     );
   }
 
-  // ==================================================
-  // Export Excel
-  // ==================================================
+  // ============================================================
+  // HOME
+  // ============================================================
 
-  void exportToExcel() {
-    if (evaluatedStudents.isEmpty) {
-      _showMessage('هنوز هیچ ارزیابی‌ای برای خروجی وجود ندارد');
-      return;
-    }
-
-    // فعلاً فقط پیام نمایش داده می‌شود.
-    // بعداً سرویس Excel به این قسمت متصل می‌شود.
-    _showMessage('خروجی اکسل آماده می‌شود...');
-  }
-
-  // ==================================================
-  // Go to Home
-  // ==================================================
-
-  void goToHome() {
+  void goHome() {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
       (route) => false,
     );
   }
 
-  // ==================================================
-  // Message
-  // ==================================================
+  // ============================================================
+  // EXPORT TO EXCEL
+  // ============================================================
+
+  Future<void> exportToExcel() async {
+    final List<String> students = widget.classModel.members;
+
+    // ==========================================================
+    // CHECK STUDENTS
+    // ==========================================================
+
+    if (students.isEmpty) {
+      _showMessage('هیچ شاگردی در این صنف وجود ندارد');
+      return;
+    }
+
+    // ==========================================================
+    // CHECK ALL COMPLETED
+    // ==========================================================
+
+    if (evaluatedStudents.length != students.length) {
+      _showMessage('ابتدا باید تمام شاگردان ارزیابی شوند');
+      return;
+    }
+
+    if (isExporting) {
+      return;
+    }
+
+    setState(() {
+      isExporting = true;
+    });
+
+    try {
+      // ========================================================
+      // GET EVALUATIONS
+      // ========================================================
+
+      final List<EvaluationModel> evaluations =
+          await IsarService.getClassEvaluations(widget.classModel.id);
+
+      debugPrint('======================================');
+
+      debugPrint('EXCEL EXPORT');
+
+      debugPrint('Class ID: ${widget.classModel.id}');
+
+      debugPrint('Students: ${students.length}');
+
+      debugPrint('Evaluations: ${evaluations.length}');
+
+      debugPrint('======================================');
+
+      for (final evaluation in evaluations) {
+        debugPrint(
+          'Student: ${evaluation.studentName} | '
+          'Answers: ${evaluation.answers} | '
+          'Score: '
+          '${evaluation.correctAnswers}/'
+          '${evaluation.totalQuestions}',
+        );
+      }
+
+      // ========================================================
+      // CHECK RESULTS
+      // ========================================================
+
+      if (evaluations.isEmpty) {
+        _showMessage('هیچ نتیجه‌ای برای خروجی وجود ندارد');
+        return;
+      }
+
+      // ========================================================
+      // TOTAL QUESTIONS
+      // ========================================================
+
+      final int totalQuestions = evaluations.fold<int>(0, (max, evaluation) {
+        if (evaluation.totalQuestions > max) {
+          return evaluation.totalQuestions;
+        }
+
+        return max;
+      });
+
+      if (totalQuestions <= 0) {
+        _showMessage('تعداد سوالات معتبر نیست');
+        return;
+      }
+
+      // ========================================================
+      // CREATE EXCEL
+      // ========================================================
+
+      final Excel excel = Excel.createExcel();
+
+      // ========================================================
+      // CREATE OUR SHEET
+      // ========================================================
+
+      const String sheetName = 'نتایج امتحان';
+
+      final Sheet sheet = excel[sheetName];
+
+      // ========================================================
+      // DELETE DEFAULT SHEET
+      // ========================================================
+
+      final String? defaultSheet = excel.getDefaultSheet();
+
+      if (defaultSheet != null &&
+          defaultSheet != sheetName &&
+          excel.tables.containsKey(defaultSheet)) {
+        excel.delete(defaultSheet);
+      }
+
+      // ========================================================
+      // TITLE
+      // ========================================================
+
+      sheet.appendRow([TextCellValue('نتایج امتحان')]);
+
+      // ========================================================
+      // CLASS NAME
+      // ========================================================
+
+      sheet.appendRow([
+        TextCellValue('نام صنف'),
+        TextCellValue(widget.classModel.className),
+      ]);
+
+      // ========================================================
+      // STUDENT COUNT
+      // ========================================================
+
+      sheet.appendRow([
+        TextCellValue('تعداد شاگردان'),
+        IntCellValue(students.length),
+      ]);
+
+      // ========================================================
+      // EVALUATED COUNT
+      // ========================================================
+
+      sheet.appendRow([
+        TextCellValue('تعداد ارزیابی شده'),
+        IntCellValue(evaluations.length),
+      ]);
+
+      // ========================================================
+      // QUESTION COUNT
+      // ========================================================
+
+      sheet.appendRow([
+        TextCellValue('تعداد سوالات'),
+        IntCellValue(totalQuestions),
+      ]);
+
+      // ========================================================
+      // EXPORT DATE
+      // ========================================================
+
+      sheet.appendRow([
+        TextCellValue('تاریخ خروجی'),
+        TextCellValue(_formatDate(DateTime.now())),
+      ]);
+
+      // ========================================================
+      // EMPTY ROW
+      // ========================================================
+
+      sheet.appendRow([]);
+
+      // ========================================================
+      // HEADER
+      // ========================================================
+
+      final List<CellValue> header = [
+        TextCellValue('شماره'),
+        TextCellValue('نام شاگرد'),
+      ];
+
+      for (int i = 0; i < totalQuestions; i++) {
+        header.add(TextCellValue('سوال ${i + 1}'));
+      }
+
+      header.add(TextCellValue('جواب درست'));
+
+      header.add(TextCellValue('تعداد سوالات'));
+
+      header.add(TextCellValue('نمره'));
+
+      sheet.appendRow(header);
+
+      // ========================================================
+      // CREATE MAP
+      // ========================================================
+
+      final Map<String, EvaluationModel> evaluationMap = {
+        for (final evaluation in evaluations)
+          evaluation.studentName.trim(): evaluation,
+      };
+
+      // ========================================================
+      // ADD STUDENTS
+      // ========================================================
+
+      int exportedRows = 0;
+
+      for (
+        int studentIndex = 0;
+        studentIndex < students.length;
+        studentIndex++
+      ) {
+        final String studentName = students[studentIndex].trim();
+
+        final EvaluationModel? evaluation = evaluationMap[studentName];
+
+        // ======================================================
+        // EVALUATION NOT FOUND
+        // ======================================================
+
+        if (evaluation == null) {
+          debugPrint(
+            'WARNING: Evaluation not found for '
+            '"$studentName"',
+          );
+
+          final List<CellValue> row = [
+            IntCellValue(studentIndex + 1),
+            TextCellValue(studentName),
+          ];
+
+          for (int i = 0; i < totalQuestions; i++) {
+            row.add(TextCellValue('-'));
+          }
+
+          row.add(IntCellValue(0));
+
+          row.add(IntCellValue(totalQuestions));
+
+          row.add(TextCellValue('بدون ارزیابی'));
+
+          sheet.appendRow(row);
+
+          continue;
+        }
+
+        // ======================================================
+        // BASIC COLUMNS
+        // ======================================================
+
+        final List<CellValue> row = [
+          IntCellValue(studentIndex + 1),
+          TextCellValue(studentName),
+        ];
+
+        // ======================================================
+        // ANSWERS
+        // ======================================================
+
+        for (
+          int questionIndex = 0;
+          questionIndex < totalQuestions;
+          questionIndex++
+        ) {
+          String answerLetter = '-';
+
+          if (questionIndex < evaluation.answers.length) {
+            final int answerIndex = evaluation.answers[questionIndex];
+
+            switch (answerIndex) {
+              case 0:
+                answerLetter = 'A';
+                break;
+
+              case 1:
+                answerLetter = 'B';
+                break;
+
+              case 2:
+                answerLetter = 'C';
+                break;
+
+              case 3:
+                answerLetter = 'D';
+                break;
+
+              default:
+                answerLetter = '-';
+            }
+          }
+
+          row.add(TextCellValue(answerLetter));
+        }
+
+        // ======================================================
+        // CORRECT ANSWERS
+        // ======================================================
+
+        row.add(IntCellValue(evaluation.correctAnswers));
+
+        // ======================================================
+        // TOTAL QUESTIONS
+        // ======================================================
+
+        row.add(IntCellValue(evaluation.totalQuestions));
+
+        // ======================================================
+        // SCORE
+        // ======================================================
+
+        row.add(
+          TextCellValue(
+            '${evaluation.correctAnswers}/'
+            '${evaluation.totalQuestions}',
+          ),
+        );
+
+        // ======================================================
+        // ADD ROW
+        // ======================================================
+
+        sheet.appendRow(row);
+
+        exportedRows++;
+
+        debugPrint(
+          'Exported: $studentName | '
+          '${evaluation.answers}',
+        );
+      }
+
+      // ========================================================
+      // COLUMN WIDTHS
+      // ========================================================
+
+      sheet.setColumnWidth(0, 10);
+
+      sheet.setColumnWidth(1, 25);
+
+      for (int i = 2; i < totalQuestions + 2; i++) {
+        sheet.setColumnWidth(i, 12);
+      }
+
+      sheet.setColumnWidth(totalQuestions + 2, 15);
+
+      sheet.setColumnWidth(totalQuestions + 3, 17);
+
+      sheet.setColumnWidth(totalQuestions + 4, 15);
+
+      // ========================================================
+      // ENCODE EXCEL
+      // ========================================================
+
+      final List<int>? fileBytes = excel.encode();
+
+      debugPrint(
+        'Excel rows exported: '
+        '$exportedRows',
+      );
+
+      debugPrint(
+        'Excel bytes: '
+        '${fileBytes?.length ?? 0}',
+      );
+
+      if (fileBytes == null || fileBytes.isEmpty) {
+        _showMessage('ساخت فایل اکسل ناموفق بود');
+        return;
+      }
+
+      // ========================================================
+      // SAVE FILE
+      // ========================================================
+
+      final Directory directory = await getApplicationDocumentsDirectory();
+
+      final String safeClassName = _safeFileName(widget.classModel.className);
+
+      final String fileName =
+          'نتایج_${safeClassName}_'
+          '${DateTime.now().millisecondsSinceEpoch}.xlsx';
+
+      final String filePath = '${directory.path}/$fileName';
+
+      final File file = File(filePath);
+
+      await file.writeAsBytes(fileBytes, flush: true);
+
+      // ========================================================
+      // VERIFY FILE
+      // ========================================================
+
+      final bool exists = await file.exists();
+
+      final int fileSize = exists ? await file.length() : 0;
+
+      debugPrint('Excel file exists: $exists');
+
+      debugPrint('Excel file size: $fileSize');
+
+      debugPrint('Excel path: $filePath');
+
+      if (!exists || fileSize == 0) {
+        _showMessage('فایل اکسل ذخیره نشد');
+        return;
+      }
+
+      // ========================================================
+      // SUCCESS
+      // ========================================================
+
+      if (!mounted) return;
+
+      _showMessage('فایل اکسل با موفقیت ساخته شد');
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted) return;
+
+      await OpenFilex.open(filePath);
+    } catch (e, stackTrace) {
+      debugPrint('======================================');
+
+      debugPrint('Excel Export Error: $e');
+
+      debugPrint('$stackTrace');
+
+      debugPrint('======================================');
+
+      if (!mounted) return;
+
+      _showMessage('خطا در ساخت فایل اکسل');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isExporting = false;
+        });
+      }
+    }
+  }
+
+  // ============================================================
+  // SAFE FILE NAME
+  // ============================================================
+
+  String _safeFileName(String name) {
+    return name.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+  }
+
+  // ============================================================
+  // FORMAT DATE
+  // ============================================================
+
+  String _formatDate(DateTime date) {
+    final String day = date.day.toString().padLeft(2, '0');
+
+    final String month = date.month.toString().padLeft(2, '0');
+
+    final String year = date.year.toString();
+
+    final String hour = date.hour.toString().padLeft(2, '0');
+
+    final String minute = date.minute.toString().padLeft(2, '0');
+
+    return '$year/$month/$day - '
+        '$hour:$minute';
+  }
+
+  // ============================================================
+  // SHOW MESSAGE
+  // ============================================================
 
   void _showMessage(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          textDirection: TextDirection.rtl,
-          textAlign: TextAlign.right,
-          style: GoogleFonts.notoSansArabic(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            textDirection: TextDirection.rtl,
+            style: GoogleFonts.notoSansArabic(),
           ),
+          behavior: SnackBarBehavior.floating,
         ),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      );
+  }
+
+  // ============================================================
+  // STUDENT CARD
+  // ============================================================
+
+  Widget _buildStudentCard(String studentName, int index) {
+    final bool isSelected = selectedIndex == index;
+
+    final bool isEvaluated = evaluatedStudents.contains(studentName.trim());
+
+    return GestureDetector(
+      onTap: isEvaluated
+          ? null
+          : () {
+              setState(() {
+                selectedIndex = index;
+              });
+            },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF6655D9)
+                : isEvaluated
+                ? const Color(0xFFB7DFC0)
+                : const Color(0xFFE5E7EB),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isEvaluated
+                    ? const Color(0xFFE8F5E9)
+                    : isSelected
+                    ? const Color(0xFFEAE7FF)
+                    : const Color(0xFFF1F3F5),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '${index + 1}',
+                style: GoogleFonts.notoSansArabic(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isEvaluated
+                      ? const Color(0xFF43A047)
+                      : isSelected
+                      ? const Color(0xFF6655D9)
+                      : Colors.black87,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    studentName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.notoSansArabic(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 3),
+
+                  Text(
+                    isEvaluated ? 'ارزیابی تکمیل شده' : 'آماده برای ارزیابی',
+                    style: GoogleFonts.notoSansArabic(
+                      fontSize: 11,
+                      color: isEvaluated
+                          ? const Color(0xFF43A047)
+                          : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            if (isEvaluated)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF43A047),
+                size: 25,
+              )
+            else
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: isSelected
+                    ? const Color(0xFF6655D9)
+                    : Colors.grey.shade400,
+                size: 25,
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  // ==================================================
-  // Build
-  // ==================================================
+  // ============================================================
+  // START BUTTON
+  // ============================================================
+
+  Widget _buildStartButton() {
+    final bool enabled = selectedIndex != null;
+
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: enabled ? continueToQuestions : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF6655D9),
+          disabledBackgroundColor: const Color(0xFFD9DDE3),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+        child: Text(
+          'شروع ارزیابی',
+          style: GoogleFonts.notoSansArabic(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // SMALL BUTTON
+  // ============================================================
+
+  Widget _buildSmallButton({
+    required String text,
+    required VoidCallback? onPressed,
+    required Color color,
+  }) {
+    final bool enabled = onPressed != null;
+
+    return Expanded(
+      child: SizedBox(
+        height: 48,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            backgroundColor: enabled ? color : Colors.grey.shade200,
+            side: BorderSide(
+              color: enabled ? color : Colors.grey.shade300,
+              width: 1,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: Text(
+            text,
+            style: GoogleFonts.notoSansArabic(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: enabled ? Colors.white : Colors.grey,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-
     final List<String> students = widget.classModel.members;
 
     final bool allCompleted =
         students.isNotEmpty && evaluatedStudents.length == students.length;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FC),
+    final int remaining = students.length - evaluatedStudents.length;
 
-      // ==================================================
-      // AppBar
-      // ==================================================
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF3F7FC),
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(13),
-              ),
-            ),
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: 18,
-              color: Color(0xFF172B5B),
-            ),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F8FC),
+
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF5F8FC),
+          elevation: 0,
+          centerTitle: true,
+
+          leading: IconButton(
+            onPressed: goHome,
+            icon: const Icon(Icons.home_outlined, size: 24),
           ),
-        ),
-        title: Text(
-          'انتخاب شاگرد',
-          style: GoogleFonts.notoSansArabic(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF172B5B),
-          ),
-        ),
-      ),
 
-      // ==================================================
-      // Body
-      // ==================================================
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            screenWidth * 0.055,
-            8,
-            screenWidth * 0.055,
-            20,
-          ),
-          child: Column(
-            children: [
-              // ==================================================
-              // Header
-              // ==================================================
-
-              _buildHeader(students.length),
-
-              const SizedBox(height: 18),
-
-              // ==================================================
-              // Students
-              // ==================================================
-              if (isLoading)
-                const Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(color: Color(0xFF1565E8)),
-                  ),
-                )
-              else
-                Expanded(
-                  child: students.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: students.length,
-                          itemBuilder: (context, index) {
-                            return _buildStudentItem(
-                              name: students[index],
-                              index: index,
-                            );
-                          },
-                        ),
-                ),
-
-              const SizedBox(height: 12),
-
-              // ==================================================
-              // Start Evaluation
-              // ==================================================
-              _buildContinueButton(),
-
-              const SizedBox(height: 10),
-
-              // ==================================================
-              // Results
-              // ==================================================
-              _buildResultsButton(enabled: evaluatedStudents.isNotEmpty),
-
-              const SizedBox(height: 12),
-
-              // ==================================================
-              // Excel
-              // ==================================================
-              _buildExcelButton(enabled: evaluatedStudents.isNotEmpty),
-
-              const SizedBox(height: 8),
-
-              // ==================================================
-              // Home
-              // ==================================================
-              _buildHomeButton(),
-
-              // ==================================================
-              // Completed Message
-              // ==================================================
-              if (allCompleted) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'ارزیابی تمام شاگردان تکمیل شده است',
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF239B56),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==================================================
-  // Header
-  // ==================================================
-
-  Widget _buildHeader(int count) {
-    final int completed = evaluatedStudents.length;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(19),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF3478F6), Color(0xFF1565E8)],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
-        borderRadius: BorderRadius.circular(23),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1565E8).withOpacity(0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
-          ),
-        ],
-      ),
-      child: Row(
-        textDirection: TextDirection.rtl,
-        children: [
-          // Icon
-          Container(
-            width: 55,
-            height: 55,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
-              borderRadius: BorderRadius.circular(17),
-            ),
-            child: const Icon(
-              Icons.groups_rounded,
-              color: Colors.white,
-              size: 29,
+          title: Text(
+            'انتخاب شاگرد',
+            style: GoogleFonts.notoSansArabic(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
 
-          const SizedBox(width: 14),
-
-          // Text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'ارزیابی شاگردان',
-                  textDirection: TextDirection.rtl,
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  'شاگردان را یکی‌یکی برای ارزیابی انتخاب کنید',
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right,
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.88),
-                  ),
-                ),
-
-                const SizedBox(height: 7),
-
-                Text(
-                  '$completed از $count شاگرد ارزیابی شده',
-                  textDirection: TextDirection.rtl,
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ==================================================
-  // Student Item
-  // ==================================================
-
-  Widget _buildStudentItem({required String name, required int index}) {
-    final bool isSelected = selectedIndex == index;
-
-    final bool isEvaluated = evaluatedStudents.contains(name);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 11),
-      decoration: BoxDecoration(
-        color: isEvaluated ? const Color(0xFFF0F8F3) : Colors.white,
-        borderRadius: BorderRadius.circular(19),
-        border: Border.all(
-          color: isEvaluated
-              ? const Color(0xFFB9DFC7)
-              : isSelected
-              ? const Color(0xFF3478F6)
-              : const Color(0xFFE4EAF3),
-          width: isSelected ? 1.5 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.035),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(19),
-        onTap: isEvaluated
-            ? null
-            : () {
-                setState(() {
-                  selectedIndex = index;
-                });
+          actions: [
+            IconButton(
+              onPressed: () {
+                Navigator.pop(context);
               },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            textDirection: TextDirection.rtl,
-            children: [
-              // ==================================================
-              // Checkbox
-              // ==================================================
+              icon: const Icon(Icons.arrow_forward_rounded),
+            ),
+          ],
+        ),
 
-              Checkbox(
-                value: isEvaluated || isSelected,
-                activeColor: isEvaluated
-                    ? const Color(0xFF239B56)
-                    : const Color(0xFF1565E8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                onChanged: isEvaluated
-                    ? null
-                    : (value) {
-                        setState(() {
-                          if (value == true) {
-                            selectedIndex = index;
-                          } else {
-                            selectedIndex = null;
-                          }
-                        });
-                      },
-              ),
-
-              const SizedBox(width: 4),
-
-              // ==================================================
-              // Student Icon
-              // ==================================================
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: isEvaluated
-                      ? const Color(0xFFDDF3E5)
-                      : isSelected
-                      ? const Color(0xFFE1EDFF)
-                      : const Color(0xFFF1F5FA),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isEvaluated ? Icons.check_rounded : Icons.person_rounded,
-                  color: isEvaluated
-                      ? const Color(0xFF239B56)
-                      : isSelected
-                      ? const Color(0xFF1565E8)
-                      : const Color(0xFF7C8DA8),
-                  size: 25,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // ==================================================
-              // Name
-              // ==================================================
-              Expanded(
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SafeArea(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      name,
-                      textDirection: TextDirection.rtl,
-                      style: GoogleFonts.notoSansArabic(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF172B5B),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEAE7FF),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.groups_rounded,
+                                color: Color(0xFF6655D9),
+                              ),
+                            ),
+
+                            const SizedBox(width: 12),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.classModel.className,
+                                    style: GoogleFonts.notoSansArabic(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 3),
+
+                                  Text(
+                                    remaining == 0
+                                        ? 'تمام شاگردان ارزیابی شده‌اند'
+                                        : '$remaining شاگرد باقی مانده',
+                                    style: GoogleFonts.notoSansArabic(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 11,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: allCompleted
+                                    ? const Color(0xFFE8F5E9)
+                                    : const Color(0xFFF0EDFF),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '${evaluatedStudents.length}/${students.length}',
+                                style: GoogleFonts.notoSansArabic(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: allCompleted
+                                      ? const Color(0xFF43A047)
+                                      : const Color(0xFF6655D9),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
-                    if (isEvaluated)
-                      Text(
-                        'ارزیابی شده',
-                        textDirection: TextDirection.rtl,
-                        style: GoogleFonts.notoSansArabic(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF239B56),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+                      child: Row(
+                        children: [
+                          Text(
+                            'شاگردان',
+                            style: GoogleFonts.notoSansArabic(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const Spacer(),
+
+                          Text(
+                            '${students.length} نفر',
+                            style: GoogleFonts.notoSansArabic(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Expanded(
+                      child: students.isEmpty
+                          ? Center(
+                              child: Text(
+                                'هیچ شاگردی در این صنف وجود ندارد',
+                                style: GoogleFonts.notoSansArabic(fontSize: 14),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                              itemCount: students.length,
+                              itemBuilder: (context, index) {
+                                return _buildStudentCard(
+                                  students[index],
+                                  index,
+                                );
+                              },
+                            ),
+                    ),
+
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(22),
                         ),
                       ),
+                      child: Column(
+                        children: [
+                          _buildStartButton(),
+
+                          const SizedBox(height: 8),
+
+                          Row(
+                            children: [
+                              _buildSmallButton(
+                                text: 'مشاهده نتایج',
+                                color: const Color(0xFFD32F2F),
+                                onPressed: evaluatedStudents.isEmpty
+                                    ? null
+                                    : openResults,
+                              ),
+
+                              const SizedBox(width: 8),
+
+                              _buildSmallButton(
+                                text: isExporting
+                                    ? 'در حال ساخت...'
+                                    : 'خروجی Excel',
+                                color: const Color(0xFF43A047),
+                                onPressed: allCompleted && !isExporting
+                                    ? exportToExcel
+                                    : null,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-
-              // ==================================================
-              // Number
-              // ==================================================
-              Container(
-                width: 30,
-                height: 30,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isEvaluated
-                      ? const Color(0xFFDDF3E5)
-                      : isSelected
-                      ? const Color(0xFFE1EDFF)
-                      : const Color(0xFFF3F6FA),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Text(
-                  '${index + 1}',
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isEvaluated
-                        ? const Color(0xFF239B56)
-                        : isSelected
-                        ? const Color(0xFF1565E8)
-                        : const Color(0xFF7C8DA8),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==================================================
-  // Continue Button
-  // ==================================================
-
-  Widget _buildContinueButton() {
-    final bool enabled = selectedIndex != null;
-
-    return SizedBox(
-      width: double.infinity,
-      height: 58,
-      child: ElevatedButton.icon(
-        onPressed: enabled ? continueToQuestions : null,
-        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-        label: Text(
-          'شروع ارزیابی',
-          textDirection: TextDirection.rtl,
-          style: GoogleFonts.notoSansArabic(
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1565E8),
-          disabledBackgroundColor: const Color(0xFFB7C9E8),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==================================================
-  // Results Button
-  // ==================================================
-
-  Widget _buildResultsButton({required bool enabled}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: enabled ? openResults : null,
-        icon: const Icon(Icons.analytics_rounded, color: Colors.white),
-        label: Text(
-          'مشاهده نتایج',
-          textDirection: TextDirection.rtl,
-          style: GoogleFonts.notoSansArabic(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF239B56),
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: const Color(0xFFB9DFC7),
-          disabledForegroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(17),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==================================================
-  // Excel Button
-  // ==================================================
-
-  Widget _buildExcelButton({required bool enabled}) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: enabled ? exportToExcel : null,
-        icon: const Icon(Icons.table_view_rounded, color: Colors.white),
-        label: Text(
-          'خروجی به اکسل',
-          textDirection: TextDirection.rtl,
-          style: GoogleFonts.notoSansArabic(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFE74C3C),
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: const Color(0xFFE8B4AF),
-          disabledForegroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(17),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ==================================================
-  // Home Button
-  // ==================================================
-
-  Widget _buildHomeButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: OutlinedButton.icon(
-        onPressed: goToHome,
-        icon: const Icon(Icons.home_rounded, color: Color(0xFF172B5B)),
-        label: Text(
-          'بازگشت به صفحه اصلی',
-          textDirection: TextDirection.rtl,
-          style: GoogleFonts.notoSansArabic(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF172B5B),
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF172B5B),
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Color(0xFFD5DEEB), width: 1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(17),
-          ),
-          elevation: 0,
-        ),
-      ),
-    );
-  }
-
-  // ==================================================
-  // Empty State
-  // ==================================================
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Text(
-        'هیچ شاگردی برای این صنف ثبت نشده است',
-        textDirection: TextDirection.rtl,
-        textAlign: TextAlign.center,
-        style: GoogleFonts.notoSansArabic(
-          fontSize: 14,
-          color: const Color(0xFF7C8DA8),
-        ),
       ),
     );
   }
