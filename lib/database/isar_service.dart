@@ -37,7 +37,6 @@ class IsarService {
       await isar.evaluationModels.put(evaluation);
     });
 
-    // برای اطمینان از ذخیره شدن اطلاعات
     final saved = await isar.evaluationModels.get(evaluation.id);
 
     if (saved == null) {
@@ -77,14 +76,13 @@ class IsarService {
         .classIdEqualTo(classId)
         .findAll();
 
-    // جدیدترین/مرتب‌شده بر اساس نام شاگرد
     evaluations.sort((a, b) => a.studentName.compareTo(b.studentName));
 
     return evaluations;
   }
 
   // ============================================================
-  // GET STUDENT EVALUATION
+  // GET STUDENT EVALUATION IN SPECIFIC CLASS
   // ============================================================
 
   static Future<EvaluationModel?> getStudentEvaluation(
@@ -93,15 +91,17 @@ class IsarService {
   ) async {
     final isar = await getInstance();
 
+    final cleanName = studentName.trim();
+
     return await isar.evaluationModels
         .filter()
         .classIdEqualTo(classId)
-        .studentNameEqualTo(studentName)
+        .studentNameEqualTo(cleanName)
         .findFirst();
   }
 
   // ============================================================
-  // CHECK STUDENT EVALUATED
+  // CHECK STUDENT EVALUATED IN SPECIFIC CLASS
   // ============================================================
 
   static Future<bool> isStudentEvaluated(
@@ -114,7 +114,7 @@ class IsarService {
   }
 
   // ============================================================
-  // DELETE STUDENT EVALUATION
+  // DELETE STUDENT EVALUATION FROM SPECIFIC CLASS
   // ============================================================
 
   static Future<void> deleteStudentEvaluation(
@@ -123,10 +123,12 @@ class IsarService {
   ) async {
     final isar = await getInstance();
 
+    final cleanName = studentName.trim();
+
     final evaluation = await isar.evaluationModels
         .filter()
         .classIdEqualTo(classId)
-        .studentNameEqualTo(studentName)
+        .studentNameEqualTo(cleanName)
         .findFirst();
 
     if (evaluation == null) {
@@ -139,7 +141,7 @@ class IsarService {
   }
 
   // ============================================================
-  // DELETE ALL CLASS EVALUATIONS
+  // DELETE ALL EVALUATIONS OF SPECIFIC CLASS
   // ============================================================
 
   static Future<void> deleteClassEvaluations(int classId) async {

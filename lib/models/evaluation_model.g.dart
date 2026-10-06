@@ -20,7 +20,7 @@ const EvaluationModelSchema = CollectionSchema(
     r'answers': PropertySchema(
       id: 0,
       name: r'answers',
-      type: IsarType.longList,
+      type: IsarType.stringList,
     ),
     r'classId': PropertySchema(
       id: 1,
@@ -73,7 +73,13 @@ int _evaluationModelEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.answers.length * 8;
+  bytesCount += 3 + object.answers.length * 3;
+  {
+    for (var i = 0; i < object.answers.length; i++) {
+      final value = object.answers[i];
+      bytesCount += value.length * 3;
+    }
+  }
   bytesCount += 3 + object.className.length * 3;
   bytesCount += 3 + object.studentName.length * 3;
   return bytesCount;
@@ -85,7 +91,7 @@ void _evaluationModelSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLongList(offsets[0], object.answers);
+  writer.writeStringList(offsets[0], object.answers);
   writer.writeLong(offsets[1], object.classId);
   writer.writeString(offsets[2], object.className);
   writer.writeLong(offsets[3], object.correctAnswers);
@@ -101,7 +107,7 @@ EvaluationModel _evaluationModelDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = EvaluationModel();
-  object.answers = reader.readLongList(offsets[0]) ?? [];
+  object.answers = reader.readStringList(offsets[0]) ?? [];
   object.classId = reader.readLong(offsets[1]);
   object.className = reader.readString(offsets[2]);
   object.correctAnswers = reader.readLong(offsets[3]);
@@ -120,7 +126,7 @@ P _evaluationModelDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLongList(offset) ?? []) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
@@ -234,49 +240,58 @@ extension EvaluationModelQueryWhere
 extension EvaluationModelQueryFilter
     on QueryBuilder<EvaluationModel, EvaluationModel, QFilterCondition> {
   QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
-      answersElementEqualTo(int value) {
+      answersElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'answers',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
       answersElementGreaterThan(
-    int value, {
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'answers',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
       answersElementLessThan(
-    int value, {
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'answers',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
       answersElementBetween(
-    int lower,
-    int upper, {
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -285,6 +300,77 @@ extension EvaluationModelQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
+      answersElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'answers',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
+      answersElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'answers',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
+      answersElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'answers',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
+      answersElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'answers',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
+      answersElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'answers',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<EvaluationModel, EvaluationModel, QAfterFilterCondition>
+      answersElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'answers',
+        value: '',
       ));
     });
   }
@@ -1181,7 +1267,8 @@ extension EvaluationModelQueryProperty
     });
   }
 
-  QueryBuilder<EvaluationModel, List<int>, QQueryOperations> answersProperty() {
+  QueryBuilder<EvaluationModel, List<String>, QQueryOperations>
+      answersProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'answers');
     });

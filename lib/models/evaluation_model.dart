@@ -15,20 +15,21 @@ class EvaluationModel {
   /// نام شاگرد
   late String studentName;
 
-  /// تعداد جواب‌های درست
-  late int correctAnswers;
+  /// پاسخ‌های 13 سؤال
+  ///
+  /// مثال:
+  /// A
+  /// 3
+  /// بلی
+  /// پروژه Flutter
+  late List<String> answers;
 
-  /// تعداد کل سوالات
+  /// تعداد سوالات
   late int totalQuestions;
 
-  /// جواب‌های انتخاب‌شده
-  ///
-  /// 0 = A
-  /// 1 = B
-  /// 2 = C
-  /// 3 = D
-  /// -1 = بدون جواب
-  late List<int> answers;
+  /// برای سازگاری با ساختار قبلی
+  /// چون این پرسش‌نامه جواب درست/غلط ندارد همیشه 0 است.
+  int correctAnswers = 0;
 
   /// تاریخ انجام ارزیابی
   late DateTime evaluatedAt;
