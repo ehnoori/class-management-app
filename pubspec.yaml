@@ -19,9 +19,12 @@ dependencies:
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   path_provider: ^2.1.5
-  excel: ^4.0.6 
+  excel: ^4.0.6
   open_filex: ^4.7.0
   share_plus: ^13.3.0
+  file_picker: ^13.1.0
+  syncfusion_flutter_pdf: ^33.2.13
+  
 
 dev_dependencies:
   flutter_test:

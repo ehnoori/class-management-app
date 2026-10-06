@@ -9,7 +9,8 @@ class ClassManagementScreen extends StatefulWidget {
   const ClassManagementScreen({super.key});
 
   @override
-  State<ClassManagementScreen> createState() => _ClassManagementScreenState();
+  State<ClassManagementScreen> createState() =>
+      _ClassManagementScreenState();
 }
 
 class _ClassManagementScreenState extends State<ClassManagementScreen> {
@@ -17,13 +18,17 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
   // Controllers
   // ============================================================
 
-  final TextEditingController classNameController = TextEditingController();
+  final TextEditingController classNameController =
+      TextEditingController();
 
-  final TextEditingController teacherController = TextEditingController();
+  final TextEditingController teacherController =
+      TextEditingController();
 
-  final TextEditingController classTimeController = TextEditingController();
+  final TextEditingController classTimeController =
+      TextEditingController();
 
-  final TextEditingController memberController = TextEditingController();
+  final TextEditingController memberController =
+      TextEditingController();
 
   // ============================================================
   // Members
@@ -129,15 +134,11 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
 
       if (!mounted) return;
 
-      // ==========================================================
-      // مهم:
-      // بعد از ذخیره موفق، صفحه انتخاب شاگرد باز می‌شود
-      // ==========================================================
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => StudentSelectionScreen(classModel: newClass),
+          builder: (context) =>
+              StudentSelectionScreen(classModel: newClass),
         ),
       );
     } catch (e) {
@@ -151,7 +152,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
   // Message
   // ============================================================
 
-  void _showMessage(String message, {bool success = false}) {
+  void _showMessage(
+    String message, {
+    bool success = false,
+  }) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -159,9 +163,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
         content: Text(
           message,
           textDirection: TextDirection.rtl,
-          style: GoogleFonts.notoSansArabic(
+          style: GoogleFonts.vazirmatn(
             fontSize: 14,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
         backgroundColor: success
@@ -169,7 +173,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
             : const Color(0xFFE74C3C),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
       ),
     );
   }
@@ -184,9 +190,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
       child: Text(
         text,
         textDirection: TextDirection.rtl,
-        style: GoogleFonts.notoSansArabic(
+        style: GoogleFonts.vazirmatn(
           fontSize: 14,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           color: const Color(0xFF263238),
         ),
       ),
@@ -206,18 +212,23 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
       controller: controller,
       textDirection: TextDirection.rtl,
       textAlign: TextAlign.right,
-      style: GoogleFonts.notoSansArabic(
+      style: GoogleFonts.vazirmatn(
         fontSize: 14,
+        fontWeight: FontWeight.w400,
         color: const Color(0xFF263238),
       ),
       decoration: InputDecoration(
         hintText: hintText,
         hintTextDirection: TextDirection.rtl,
-        hintStyle: GoogleFonts.notoSansArabic(
+        hintStyle: GoogleFonts.vazirmatn(
           fontSize: 13,
+          fontWeight: FontWeight.w400,
           color: const Color(0xFF9AA7B2),
         ),
-        prefixIcon: Icon(icon, color: const Color(0xFF6C63FF)),
+        prefixIcon: Icon(
+          icon,
+          color: const Color(0xFF6C63FF),
+        ),
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
@@ -226,15 +237,22 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE1E8EF)),
+          borderSide: const BorderSide(
+            color: Color(0xFFE1E8EF),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE1E8EF)),
+          borderSide: const BorderSide(
+            color: Color(0xFFE1E8EF),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 1.5),
+          borderSide: const BorderSide(
+            color: Color(0xFF6C63FF),
+            width: 1.5,
+          ),
         ),
       ),
     );
@@ -247,15 +265,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
   Widget _memberInput() {
     return Row(
       children: [
-        Expanded(
-          child: _textField(
-            controller: memberController,
-            hintText: 'نام عضو را وارد کنید',
-            icon: Icons.person_add_alt_1_rounded,
-          ),
-        ),
-
-        const SizedBox(width: 10),
+        // --------------------------------------------------------
+        // Add Button - Left
+        // --------------------------------------------------------
 
         Container(
           height: 55,
@@ -266,7 +278,24 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
           ),
           child: IconButton(
             onPressed: addMember,
-            icon: const Icon(Icons.add, color: Colors.white),
+            icon: const Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 10),
+
+        // --------------------------------------------------------
+        // Member TextField
+        // --------------------------------------------------------
+
+        Expanded(
+          child: _textField(
+            controller: memberController,
+            hintText: 'نام عضو را وارد کنید',
+            icon: Icons.person_add_alt_1_rounded,
           ),
         ),
       ],
@@ -285,14 +314,17 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE5EAF0)),
+          border: Border.all(
+            color: const Color(0xFFE5EAF0),
+          ),
         ),
         child: Text(
           'هنوز عضوی اضافه نشده است',
           textDirection: TextDirection.rtl,
           textAlign: TextAlign.center,
-          style: GoogleFonts.notoSansArabic(
+          style: GoogleFonts.vazirmatn(
             fontSize: 13,
+            fontWeight: FontWeight.w400,
             color: const Color(0xFF9AA7B2),
           ),
         ),
@@ -300,63 +332,97 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     }
 
     return Column(
-      children: List.generate(members.length, (index) {
-        final String member = members[index];
+      children: List.generate(
+        members.length,
+        (index) {
+          final String member = members[index];
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5EAF0)),
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () {
-                  removeMember(index);
-                },
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: Color(0xFFE74C3C),
-                ),
+          return Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFFE5EAF0),
               ),
+            ),
 
-              const SizedBox(width: 4),
+            // ----------------------------------------------------
+            // RTL:
+            // Left  = Delete
+            // Center = Member name
+            // Right = Person icon
+            // ----------------------------------------------------
 
-              Expanded(
-                child: Text(
-                  member,
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right,
-                  style: GoogleFonts.notoSansArabic(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF263238),
+            child: Row(
+              textDirection: TextDirection.rtl,
+              children: [
+                // ==================================================
+                // Person Icon - Right
+                // ==================================================
+
+                Container(
+                  height: 38,
+                  width: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0EEFF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    color: Color(0xFF6C63FF),
+                    size: 21,
                   ),
                 ),
-              ),
 
-              const SizedBox(width: 8),
+                const SizedBox(width: 10),
 
-              Container(
-                height: 38,
-                width: 38,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0EEFF),
-                  borderRadius: BorderRadius.circular(10),
+                // ==================================================
+                // Member Name - Center
+                // ==================================================
+
+                Expanded(
+                  child: Text(
+                    member,
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.right,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.vazirmatn(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF263238),
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: Color(0xFF6C63FF),
-                  size: 21,
+
+                const SizedBox(width: 8),
+
+                // ==================================================
+                // Delete Icon - Left
+                // ==================================================
+
+                IconButton(
+                  tooltip: 'حذف عضو',
+                  onPressed: () {
+                    removeMember(index);
+                  },
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Color(0xFFE74C3C),
+                    size: 23,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      }),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -366,7 +432,8 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenWidth =
+        MediaQuery.of(context).size.width;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -376,18 +443,21 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
         // ========================================================
         // AppBar
         // ========================================================
+
         appBar: AppBar(
           elevation: 0,
           backgroundColor: const Color(0xFFF3F7FC),
           centerTitle: true,
+
           title: Text(
             'مشخصات صنف',
-            style: GoogleFonts.notoSansArabic(
+            style: GoogleFonts.vazirmatn(
               fontSize: 19,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               color: const Color(0xFF263238),
             ),
           ),
+
           leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
@@ -403,6 +473,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
         // ========================================================
         // Body
         // ========================================================
+
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(
@@ -416,7 +487,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                 // Class Name
                 // ==================================================
 
-                _label('نام صنف'),
+                _label('نام صنف :'),
 
                 const SizedBox(height: 8),
 
@@ -431,7 +502,8 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                 // ==================================================
                 // Teacher Name
                 // ==================================================
-                _label('نام استاد'),
+
+                _label('نام استاد :'),
 
                 const SizedBox(height: 8),
 
@@ -446,7 +518,8 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                 // ==================================================
                 // Class Time
                 // ==================================================
-                _label('تایم درسی'),
+
+                _label('تایم درسی :'),
 
                 const SizedBox(height: 8),
 
@@ -461,7 +534,8 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                 // ==================================================
                 // Members
                 // ==================================================
-                _label('اعضای صنف'),
+
+                _label('   اعضای صنف : '),
 
                 const SizedBox(height: 8),
 
@@ -474,28 +548,44 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                 const SizedBox(height: 28),
 
                 // ==================================================
-                // Save Button
+                // Save Class Button
                 // ==================================================
+
                 SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton.icon(
+                  child: ElevatedButton(
                     onPressed: saveClass,
-                    icon: const Icon(Icons.save_rounded, color: Colors.white),
-                    label: Text(
-                      'ذخیره صنف',
-                      style: GoogleFonts.notoSansArabic(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6C63FF),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      textDirection: TextDirection.rtl,
+                      children: [
+                        // Text
+                        Text(
+                          'ذخیره صنف',
+                          style: GoogleFonts.vazirmatn(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+
+                        const SizedBox(width: 10),
+
+                        // Icon - Left of text
+                        const Icon(
+                          Icons.save_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ],
                     ),
                   ),
                 ),

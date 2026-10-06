@@ -43,16 +43,36 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
   // ============================================================
 
   final List<List<String>> options = [
-    ['یک دستگاه الکترونیکی', 'یک نوع غذا', 'یک وسیله ورزشی', 'یک کتاب'],
-    ['کیبورد', 'مانیتور', 'پرینتر', 'اسپیکر'],
-    ['مانیتور', 'کیبورد', 'ماوس', 'اسکنر'],
+    [
+      'یک دستگاه الکترونیکی',
+      'یک نوع غذا',
+      'یک وسیله ورزشی',
+      'یک کتاب',
+    ],
+    [
+      'کیبورد',
+      'مانیتور',
+      'پرینتر',
+      'اسپیکر',
+    ],
+    [
+      'مانیتور',
+      'کیبورد',
+      'ماوس',
+      'اسکنر',
+    ],
     [
       'برنامه‌ای برای مدیریت سخت‌افزار و نرم‌افزار',
       'یک بازی',
       'یک فایل تصویری',
       'یک وسیله ورودی',
     ],
-    ['Windows', 'Photoshop', 'Chrome', 'Word'],
+    [
+      'Windows',
+      'Photoshop',
+      'Chrome',
+      'Word',
+    ],
     [
       'برای وارد کردن متن و اطلاعات',
       'برای نمایش تصویر',
@@ -77,14 +97,30 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
       'یک وسیله ورودی',
       'یک نوع فایل',
     ],
-    ['هارد دیسک', 'مانیتور', 'کیبورد', 'ماوس'],
+    [
+      'هارد دیسک',
+      'مانیتور',
+      'کیبورد',
+      'ماوس',
+    ],
   ];
 
   // ============================================================
   // CORRECT ANSWERS
   // ============================================================
 
-  final List<int> correctAnswers = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  final List<int> correctAnswers = [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  ];
 
   // ============================================================
   // SELECTED ANSWERS
@@ -106,7 +142,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
   void initState() {
     super.initState();
 
-    selectedAnswers = List<int?>.filled(questions.length, null);
+    selectedAnswers = List<int?>.filled(
+      questions.length,
+      null,
+    );
   }
 
   // ============================================================
@@ -125,7 +164,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
 
   void nextQuestion() {
     if (selectedAnswers[currentQuestion] == null) {
-      _showMessage('لطفاً ابتدا یک گزینه را انتخاب کنید');
+      _showMessage(
+        'لطفاً ابتدا یک گزینه را انتخاب کنید',
+      );
       return;
     }
 
@@ -155,10 +196,14 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
   // ============================================================
 
   Future<void> submitEvaluation() async {
-    final bool allAnswered = selectedAnswers.every((answer) => answer != null);
+    final bool allAnswered = selectedAnswers.every(
+      (answer) => answer != null,
+    );
 
     if (!allAnswered) {
-      _showMessage('لطفاً به تمام سوالات پاسخ دهید');
+      _showMessage(
+        'لطفاً به تمام سوالات پاسخ دهید',
+      );
       return;
     }
 
@@ -177,7 +222,11 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
         ..studentName = widget.studentName
         ..correctAnswers = correctCount
         ..totalQuestions = questions.length
-        ..answers = selectedAnswers.map((answer) => answer ?? -1).toList()
+        ..answers = selectedAnswers
+            .map(
+              (answer) => answer ?? -1,
+            )
+            .toList()
         ..evaluatedAt = DateTime.now();
 
       await IsarService.saveEvaluation(evaluation);
@@ -186,11 +235,15 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
 
       Navigator.pop(context, true);
     } catch (e) {
-      debugPrint('Save Evaluation Error: $e');
+      debugPrint(
+        'Save Evaluation Error: $e',
+      );
 
       if (!mounted) return;
 
-      _showMessage('ذخیره ارزیابی با خطا مواجه شد');
+      _showMessage(
+        'ذخیره ارزیابی با خطا مواجه شد',
+      );
     }
   }
 
@@ -208,7 +261,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
           content: Text(
             message,
             textDirection: TextDirection.rtl,
-            style: GoogleFonts.notoSansArabic(),
+            style: GoogleFonts.vazirmatn(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -220,7 +276,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
   // ============================================================
 
   String optionLetter(int index) {
-    return String.fromCharCode(65 + index);
+    return String.fromCharCode(
+      65 + index,
+    );
   }
 
   // ============================================================
@@ -229,33 +287,43 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String question = questions[currentQuestion];
+    final String question =
+        questions[currentQuestion];
 
-    final List<String> currentOptions = options[currentQuestion];
+    final List<String> currentOptions =
+        options[currentQuestion];
 
-    final int? selected = selectedAnswers[currentQuestion];
+    final int? selected =
+        selectedAnswers[currentQuestion];
 
-    final double progress = (currentQuestion + 1) / questions.length;
+    final double progress =
+        (currentQuestion + 1) / questions.length;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xFFF0F6FF),
 
+        // ======================================================
+        // APP BAR
+        // ======================================================
+
         appBar: AppBar(
           elevation: 0,
           backgroundColor: const Color(0xFFF0F6FF),
-
+          centerTitle: true,
           title: Text(
             'ارزیابی شاگرد',
-            style: GoogleFonts.notoSansArabic(
-              fontWeight: FontWeight.bold,
+            style: GoogleFonts.vazirmatn(
+              fontWeight: FontWeight.w600,
               fontSize: 18,
             ),
           ),
-
-          centerTitle: true,
         ),
+
+        // ======================================================
+        // BODY
+        // ======================================================
 
         body: SafeArea(
           child: Column(
@@ -269,28 +337,30 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                   horizontal: 20,
                   vertical: 10,
                 ),
-
                 child: Row(
                   children: [
-                    const Icon(Icons.person_rounded, size: 22),
+                    const Icon(
+                      Icons.person_rounded,
+                      size: 22,
+                    ),
 
                     const SizedBox(width: 8),
 
                     Expanded(
                       child: Text(
                         widget.studentName,
-                        style: GoogleFonts.notoSansArabic(
+                        style: GoogleFonts.vazirmatn(
                           fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
 
                     Text(
                       '${currentQuestion + 1}/${questions.length}',
-                      style: GoogleFonts.notoSansArabic(
+                      style: GoogleFonts.vazirmatn(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -300,12 +370,13 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
               // ==================================================
               // PROGRESS
               // ==================================================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
 
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 8,
@@ -317,13 +388,13 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
               // ==================================================
               // CONTENT
               // ==================================================
+
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
-
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-
+                    crossAxisAlignment:
+                        CrossAxisAlignment.stretch,
                     children: [
                       // ==================================================
                       // QUESTION CARD
@@ -331,31 +402,30 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
 
                       Container(
                         padding: const EdgeInsets.all(20),
-
                         decoration: BoxDecoration(
                           color: Colors.white,
-
-                          borderRadius: BorderRadius.circular(20),
-
+                          borderRadius:
+                              BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color:
+                                  Colors.black.withOpacity(0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
                             Text(
                               'سوال ${currentQuestion + 1}',
-                              style: GoogleFonts.notoSansArabic(
+                              style: GoogleFonts.vazirmatn(
                                 fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF6C5CE7),
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    const Color(0xFF6C5CE7),
                               ),
                             ),
 
@@ -363,9 +433,9 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
 
                             Text(
                               question,
-                              style: GoogleFonts.notoSansArabic(
+                              style: GoogleFonts.vazirmatn(
                                 fontSize: 17,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -377,98 +447,120 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                       // ==================================================
                       // OPTIONS
                       // ==================================================
-                      ...List.generate(currentOptions.length, (index) {
-                        final bool isSelected = selected == index;
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                      ...List.generate(
+                        currentOptions.length,
+                        (index) {
+                          final bool isSelected =
+                              selected == index;
 
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-
-                            onTap: () {
-                              selectAnswer(index);
-                            },
-
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 15,
-                              ),
-
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? const Color(0xFFEDE9FF)
-                                    : Colors.white,
-
-                                borderRadius: BorderRadius.circular(16),
-
-                                border: Border.all(
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(
+                              bottom: 12,
+                            ),
+                            child: InkWell(
+                              borderRadius:
+                                  BorderRadius.circular(16),
+                              onTap: () {
+                                selectAnswer(index);
+                              },
+                              child: AnimatedContainer(
+                                duration:
+                                    const Duration(
+                                  milliseconds: 200,
+                                ),
+                                padding:
+                                    const EdgeInsets
+                                        .symmetric(
+                                  horizontal: 16,
+                                  vertical: 15,
+                                ),
+                                decoration: BoxDecoration(
                                   color: isSelected
-                                      ? const Color(0xFF6C5CE7)
-                                      : Colors.grey.shade300,
+                                      ? const Color(
+                                          0xFFEDE9FF,
+                                        )
+                                      : Colors.white,
+                                  borderRadius:
+                                      BorderRadius.circular(
+                                    16,
+                                  ),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(
+                                            0xFF6C5CE7,
+                                          )
+                                        : Colors
+                                            .grey
+                                            .shade300,
+                                    width:
+                                        isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      alignment:
+                                          Alignment.center,
+                                      decoration:
+                                          BoxDecoration(
+                                        shape:
+                                            BoxShape.circle,
+                                        color: isSelected
+                                            ? const Color(
+                                                0xFF6C5CE7,
+                                              )
+                                            : Colors
+                                                .grey
+                                                .shade200,
+                                      ),
+                                      child: Text(
+                                        optionLetter(index),
+                                        style:
+                                            GoogleFonts
+                                                .vazirmatn(
+                                          fontWeight:
+                                              FontWeight.w600,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : Colors
+                                                  .black87,
+                                        ),
+                                      ),
+                                    ),
 
-                                  width: isSelected ? 2 : 1,
+                                    const SizedBox(width: 14),
+
+                                    Expanded(
+                                      child: Text(
+                                        currentOptions[index],
+                                        style: GoogleFonts
+                                            .vazirmatn(
+                                          fontSize: 14,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons
+                                            .check_circle_rounded,
+                                        color:
+                                            Color(0xFF6C5CE7),
+                                      ),
+                                  ],
                                 ),
                               ),
-
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-
-                                    alignment: Alignment.center,
-
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-
-                                      color: isSelected
-                                          ? const Color(0xFF6C5CE7)
-                                          : Colors.grey.shade200,
-                                    ),
-
-                                    child: Text(
-                                      optionLetter(index),
-
-                                      style: GoogleFonts.notoSansArabic(
-                                        fontWeight: FontWeight.bold,
-
-                                        color: isSelected
-                                            ? Colors.white
-                                            : Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(width: 14),
-
-                                  Expanded(
-                                    child: Text(
-                                      currentOptions[index],
-
-                                      style: GoogleFonts.notoSansArabic(
-                                        fontSize: 14,
-                                        fontWeight: isSelected
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ),
-
-                                  if (isSelected)
-                                    const Icon(
-                                      Icons.check_circle_rounded,
-                                      color: Color(0xFF6C5CE7),
-                                    ),
-                                ],
-                              ),
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -477,73 +569,78 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
               // ==================================================
               // BOTTOM BUTTONS
               // ==================================================
+
               Container(
                 padding: const EdgeInsets.all(20),
-
                 decoration: BoxDecoration(
                   color: Colors.white,
-
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-
+                      color:
+                          Colors.black.withOpacity(0.05),
                       blurRadius: 10,
-
                       offset: const Offset(0, -4),
                     ),
                   ],
                 ),
-
                 child: Row(
                   children: [
                     if (currentQuestion > 0)
                       Expanded(
                         child: OutlinedButton(
                           onPressed: previousQuestion,
-
                           style: OutlinedButton.styleFrom(
-                            minimumSize: const Size(0, 52),
-
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
+                            minimumSize:
+                                const Size(0, 52),
+                            shape:
+                                RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(
+                                15,
+                              ),
                             ),
                           ),
-
                           child: Text(
                             'قبلی',
-                            style: GoogleFonts.notoSansArabic(
-                              fontWeight: FontWeight.bold,
+                            style:
+                                GoogleFonts.vazirmatn(
+                              fontWeight:
+                                  FontWeight.w600,
                             ),
                           ),
                         ),
                       ),
 
-                    if (currentQuestion > 0) const SizedBox(width: 12),
+                    if (currentQuestion > 0)
+                      const SizedBox(width: 12),
 
                     Expanded(
                       flex: 2,
-
                       child: ElevatedButton(
                         onPressed: nextQuestion,
-
                         style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(0, 52),
-
-                          backgroundColor: const Color(0xFF6C5CE7),
-
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                          minimumSize:
+                              const Size(0, 52),
+                          backgroundColor:
+                              const Color(0xFF6C5CE7),
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(
+                              15,
+                            ),
                           ),
                         ),
-
                         child: Text(
-                          currentQuestion == questions.length - 1
+                          currentQuestion ==
+                                  questions.length - 1
                               ? 'ثبت ارزیابی'
                               : 'سوال بعدی',
-
-                          style: GoogleFonts.notoSansArabic(
+                          style:
+                              GoogleFonts.vazirmatn(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                FontWeight.w600,
                           ),
                         ),
                       ),

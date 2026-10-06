@@ -64,7 +64,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
   // ==================================================
 
   Future<void> _refreshResults() async {
-    final results = await IsarService.getClassEvaluations(widget.classModel.id);
+    final results = await IsarService.getClassEvaluations(
+      widget.classModel.id,
+    );
 
     if (!mounted) return;
 
@@ -103,7 +105,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
         content: Text(
           message,
           textDirection: TextDirection.rtl,
-          style: GoogleFonts.notoSansArabic(
+          style: GoogleFonts.vazirmatn(
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -111,7 +113,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
         margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
       ),
     );
   }
@@ -136,6 +140,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
       // ==================================================
       // AppBar
       // ==================================================
+
       appBar: AppBar(
         backgroundColor: const Color(0xFFF3F7FC),
         surfaceTintColor: Colors.transparent,
@@ -164,9 +169,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
 
         title: Text(
           'نتایج ارزیابی',
-          style: GoogleFonts.notoSansArabic(
+          style: GoogleFonts.vazirmatn(
             fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: const Color(0xFF172B5B),
           ),
         ),
@@ -195,6 +200,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
       // ==================================================
       // Body
       // ==================================================
+
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(
@@ -205,7 +211,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
           ),
           child: isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF1565E8)),
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF1565E8),
+                  ),
                 )
               : RefreshIndicator(
                   color: const Color(0xFF1565E8),
@@ -224,6 +232,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                       // ==================================================
                       // Statistics
                       // ==================================================
+
                       _buildStatistics(
                         totalStudents: totalStudents,
                         evaluatedStudents: evaluatedStudents,
@@ -235,6 +244,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                       // ==================================================
                       // Title
                       // ==================================================
+
                       Row(
                         textDirection: TextDirection.rtl,
                         children: [
@@ -249,9 +259,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                           Text(
                             'نتیجه شاگردان',
                             textDirection: TextDirection.rtl,
-                            style: GoogleFonts.notoSansArabic(
+                            style: GoogleFonts.vazirmatn(
                               fontSize: 17,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: const Color(0xFF172B5B),
                             ),
                           ),
@@ -263,15 +273,19 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                       // ==================================================
                       // Results
                       // ==================================================
+
                       if (evaluations.isEmpty)
                         _buildEmptyState()
                       else
-                        ...List.generate(evaluations.length, (index) {
-                          return _buildResultItem(
-                            evaluation: evaluations[index],
-                            index: index,
-                          );
-                        }),
+                        ...List.generate(
+                          evaluations.length,
+                          (index) {
+                            return _buildResultItem(
+                              evaluation: evaluations[index],
+                              index: index,
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -290,7 +304,10 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF3478F6), Color(0xFF1565E8)],
+          colors: [
+            Color(0xFF3478F6),
+            Color(0xFF1565E8),
+          ],
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
         ),
@@ -332,9 +349,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                   textAlign: TextAlign.right,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.notoSansArabic(
+                  style: GoogleFonts.vazirmatn(
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
@@ -344,8 +361,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                 Text(
                   'نتایج ارزیابی شاگردان',
                   textDirection: TextDirection.rtl,
-                  style: GoogleFonts.notoSansArabic(
+                  style: GoogleFonts.vazirmatn(
                     fontSize: 12,
+                    fontWeight: FontWeight.w400,
                     color: Colors.white.withOpacity(0.88),
                   ),
                 ),
@@ -417,11 +435,16 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
     required Color iconBackground,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 7),
+      padding: const EdgeInsets.symmetric(
+        vertical: 14,
+        horizontal: 7,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFFE1E8F2)),
+        border: Border.all(
+          color: const Color(0xFFE1E8F2),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.025),
@@ -439,16 +462,20 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
               color: iconBackground,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 21),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 21,
+            ),
           ),
 
           const SizedBox(height: 8),
 
           Text(
             value,
-            style: GoogleFonts.notoSansArabic(
+            style: GoogleFonts.vazirmatn(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: const Color(0xFF172B5B),
             ),
           ),
@@ -459,7 +486,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
             title,
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.center,
-            style: GoogleFonts.notoSansArabic(
+            style: GoogleFonts.vazirmatn(
               fontSize: 9.5,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF7C8DA8),
@@ -487,7 +514,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: const Color(0xFFE1E8F2)),
+        border: Border.all(
+          color: const Color(0xFFE1E8F2),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -508,8 +537,8 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
               Container(
                 width: 48,
                 height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE1EDFF),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE1EDFF),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -524,6 +553,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
               // ==================================================
               // Student Name
               // ==================================================
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -534,9 +564,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                       textAlign: TextAlign.right,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.notoSansArabic(
+                      style: GoogleFonts.vazirmatn(
                         fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: const Color(0xFF172B5B),
                       ),
                     ),
@@ -546,9 +576,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                     Text(
                       'ارزیابی شده',
                       textDirection: TextDirection.rtl,
-                      style: GoogleFonts.notoSansArabic(
+                      style: GoogleFonts.vazirmatn(
                         fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         color: const Color(0xFF239B56),
                       ),
                     ),
@@ -561,6 +591,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
               // ==================================================
               // Percentage
               // ==================================================
+
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 11,
@@ -572,9 +603,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                 ),
                 child: Text(
                   _getPercentageText(evaluation),
-                  style: GoogleFonts.notoSansArabic(
+                  style: GoogleFonts.vazirmatn(
                     fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: _getPercentageColor(percentage),
                   ),
                 ),
@@ -587,6 +618,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
           // ==================================================
           // Score
           // ==================================================
+
           Row(
             textDirection: TextDirection.rtl,
             children: [
@@ -631,6 +663,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
           // ==================================================
           // Progress
           // ==================================================
+
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -640,9 +673,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
                   Text(
                     'درصد موفقیت',
                     textDirection: TextDirection.rtl,
-                    style: GoogleFonts.notoSansArabic(
+                    style: GoogleFonts.vazirmatn(
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: const Color(0xFF7C8DA8),
                     ),
                   ),
@@ -651,9 +684,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
 
                   Text(
                     '${percentage.round()}%',
-                    style: GoogleFonts.notoSansArabic(
+                    style: GoogleFonts.vazirmatn(
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: _getPercentageColor(percentage),
                     ),
                   ),
@@ -692,23 +725,30 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
     required Color background,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 5),
+      padding: const EdgeInsets.symmetric(
+        vertical: 9,
+        horizontal: 5,
+      ),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 18),
+          Icon(
+            icon,
+            color: color,
+            size: 18,
+          ),
 
           const SizedBox(height: 4),
 
           Text(
             value,
             textAlign: TextAlign.center,
-            style: GoogleFonts.notoSansArabic(
+            style: GoogleFonts.vazirmatn(
               fontSize: 13,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: color,
             ),
           ),
@@ -721,7 +761,7 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.notoSansArabic(
+            style: GoogleFonts.vazirmatn(
               fontSize: 8.5,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF65748B),
@@ -739,11 +779,16 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
   Widget _buildEmptyState() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 45, horizontal: 20),
+      padding: const EdgeInsets.symmetric(
+        vertical: 45,
+        horizontal: 20,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE1E8F2)),
+        border: Border.all(
+          color: const Color(0xFFE1E8F2),
+        ),
       ),
       child: Column(
         children: [
@@ -767,9 +812,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
             'هنوز نتیجه‌ای ثبت نشده است',
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.center,
-            style: GoogleFonts.notoSansArabic(
+            style: GoogleFonts.vazirmatn(
               fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: const Color(0xFF172B5B),
             ),
           ),
@@ -780,8 +825,9 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
             'بعد از ارزیابی شاگردان، نتایج آن‌ها در این صفحه نمایش داده می‌شود.',
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.center,
-            style: GoogleFonts.notoSansArabic(
+            style: GoogleFonts.vazirmatn(
               fontSize: 12,
+              fontWeight: FontWeight.w400,
               height: 1.7,
               color: const Color(0xFF7C8DA8),
             ),
@@ -834,4 +880,4 @@ class _EvaluationResultsScreenState extends State<EvaluationResultsScreen> {
 
     return '$day/$month/${date.year}';
   }
-}
+} 

@@ -9,20 +9,25 @@ import 'package:path_provider/path_provider.dart';
 import '../database/isar_service.dart';
 import '../models/class_model.dart';
 import '../models/evaluation_model.dart';
-import 'evaluation_results_screen.dart';
 import 'evaluation_screen.dart';
 import 'home_screen.dart';
+
 
 class StudentSelectionScreen extends StatefulWidget {
   final ClassModel classModel;
 
-  const StudentSelectionScreen({super.key, required this.classModel});
+  const StudentSelectionScreen({
+    super.key,
+    required this.classModel,
+  });
 
   @override
-  State<StudentSelectionScreen> createState() => _StudentSelectionScreenState();
+  State<StudentSelectionScreen> createState() =>
+      _StudentSelectionScreenState();
 }
 
-class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
+class _StudentSelectionScreenState
+    extends State<StudentSelectionScreen> {
   // ============================================================
   // VARIABLES
   // ============================================================
@@ -51,17 +56,24 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
   Future<void> _loadEvaluatedStudents() async {
     try {
-      final evaluations = await IsarService.getClassEvaluations(
+      final evaluations =
+          await IsarService.getClassEvaluations(
         widget.classModel.id,
       );
 
       final Set<String> names = evaluations
-          .map((evaluation) => evaluation.studentName.trim())
+          .map(
+            (evaluation) =>
+                evaluation.studentName.trim(),
+          )
           .toSet();
 
-      debugPrint('Loaded evaluations: ${evaluations.length}');
-
-      debugPrint('Evaluated students: $names');
+      debugPrint(
+        'Loaded evaluations: ${evaluations.length}',
+      );
+      debugPrint(
+        'Evaluated students: $names',
+      );
 
       if (!mounted) return;
 
@@ -70,8 +82,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         isLoading = false;
       });
     } catch (e, stackTrace) {
-      debugPrint('Load Evaluations Error: $e');
-
+      debugPrint(
+        'Load Evaluations Error: $e',
+      );
       debugPrint('$stackTrace');
 
       if (!mounted) return;
@@ -80,7 +93,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         isLoading = false;
       });
 
-      _showMessage('خطا در دریافت اطلاعات ارزیابی');
+      _showMessage(
+        'خطا در دریافت اطلاعات ارزیابی',
+      );
     }
   }
 
@@ -90,14 +105,19 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
   Future<void> continueToQuestions() async {
     if (selectedIndex == null) {
-      _showMessage('لطفاً یک شاگرد را انتخاب کنید');
+      _showMessage(
+        'لطفاً یک شاگرد را انتخاب کنید',
+      );
       return;
     }
 
-    final String studentName = widget.classModel.members[selectedIndex!].trim();
+    final String studentName =
+        widget.classModel.members[selectedIndex!].trim();
 
     if (evaluatedStudents.contains(studentName)) {
-      _showMessage('این شاگرد قبلاً ارزیابی شده است');
+      _showMessage(
+        'این شاگرد قبلاً ارزیابی شده است',
+      );
       return;
     }
 
@@ -123,26 +143,15 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   }
 
   // ============================================================
-  // RESULTS
-  // ============================================================
-
-  void openResults() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EvaluationResultsScreen(classModel: widget.classModel),
-      ),
-    );
-  }
-
-  // ============================================================
   // HOME
   // ============================================================
 
   void goHome() {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(
+        builder: (_) => const HomeScreen(),
+      ),
       (route) => false,
     );
   }
@@ -152,23 +161,20 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   // ============================================================
 
   Future<void> exportToExcel() async {
-    final List<String> students = widget.classModel.members;
-
-    // ==========================================================
-    // CHECK STUDENTS
-    // ==========================================================
+    final List<String> students =
+        widget.classModel.members;
 
     if (students.isEmpty) {
-      _showMessage('هیچ شاگردی در این صنف وجود ندارد');
+      _showMessage(
+        'هیچ شاگردی در این صنف وجود ندارد',
+      );
       return;
     }
 
-    // ==========================================================
-    // CHECK ALL COMPLETED
-    // ==========================================================
-
     if (evaluatedStudents.length != students.length) {
-      _showMessage('ابتدا باید تمام شاگردان ارزیابی شوند');
+      _showMessage(
+        'ابتدا باید تمام شاگردان ارزیابی شوند',
+      );
       return;
     }
 
@@ -181,23 +187,22 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
     });
 
     try {
-      // ========================================================
-      // GET EVALUATIONS
-      // ========================================================
-
       final List<EvaluationModel> evaluations =
-          await IsarService.getClassEvaluations(widget.classModel.id);
+          await IsarService.getClassEvaluations(
+        widget.classModel.id,
+      );
 
       debugPrint('======================================');
-
       debugPrint('EXCEL EXPORT');
-
-      debugPrint('Class ID: ${widget.classModel.id}');
-
-      debugPrint('Students: ${students.length}');
-
-      debugPrint('Evaluations: ${evaluations.length}');
-
+      debugPrint(
+        'Class ID: ${widget.classModel.id}',
+      );
+      debugPrint(
+        'Students: ${students.length}',
+      );
+      debugPrint(
+        'Evaluations: ${evaluations.length}',
+      );
       debugPrint('======================================');
 
       for (final evaluation in evaluations) {
@@ -210,51 +215,43 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         );
       }
 
-      // ========================================================
-      // CHECK RESULTS
-      // ========================================================
-
       if (evaluations.isEmpty) {
-        _showMessage('هیچ نتیجه‌ای برای خروجی وجود ندارد');
+        _showMessage(
+          'هیچ نتیجه‌ای برای خروجی وجود ندارد',
+        );
         return;
       }
 
-      // ========================================================
-      // TOTAL QUESTIONS
-      // ========================================================
+      final int totalQuestions =
+          evaluations.fold<int>(
+        0,
+        (max, evaluation) {
+          if (evaluation.totalQuestions > max) {
+            return evaluation.totalQuestions;
+          }
 
-      final int totalQuestions = evaluations.fold<int>(0, (max, evaluation) {
-        if (evaluation.totalQuestions > max) {
-          return evaluation.totalQuestions;
-        }
-
-        return max;
-      });
+          return max;
+        },
+      );
 
       if (totalQuestions <= 0) {
-        _showMessage('تعداد سوالات معتبر نیست');
+        _showMessage(
+          'تعداد سوالات معتبر نیست',
+        );
         return;
       }
 
-      // ========================================================
-      // CREATE EXCEL
-      // ========================================================
+      final Excel excel =
+          Excel.createExcel();
 
-      final Excel excel = Excel.createExcel();
+      const String sheetName =
+          'نتایج امتحان';
 
-      // ========================================================
-      // CREATE OUR SHEET
-      // ========================================================
+      final Sheet sheet =
+          excel[sheetName];
 
-      const String sheetName = 'نتایج امتحان';
-
-      final Sheet sheet = excel[sheetName];
-
-      // ========================================================
-      // DELETE DEFAULT SHEET
-      // ========================================================
-
-      final String? defaultSheet = excel.getDefaultSheet();
+      final String? defaultSheet =
+          excel.getDefaultSheet();
 
       if (defaultSheet != null &&
           defaultSheet != sheetName &&
@@ -266,7 +263,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
       // TITLE
       // ========================================================
 
-      sheet.appendRow([TextCellValue('نتایج امتحان')]);
+      sheet.appendRow([
+        TextCellValue('نتایج امتحان'),
+      ]);
 
       // ========================================================
       // CLASS NAME
@@ -274,7 +273,9 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
       sheet.appendRow([
         TextCellValue('نام صنف'),
-        TextCellValue(widget.classModel.className),
+        TextCellValue(
+          widget.classModel.className,
+        ),
       ]);
 
       // ========================================================
@@ -310,12 +311,10 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
       sheet.appendRow([
         TextCellValue('تاریخ خروجی'),
-        TextCellValue(_formatDate(DateTime.now())),
+        TextCellValue(
+          _formatDate(DateTime.now()),
+        ),
       ]);
-
-      // ========================================================
-      // EMPTY ROW
-      // ========================================================
 
       sheet.appendRow([]);
 
@@ -328,15 +327,27 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         TextCellValue('نام شاگرد'),
       ];
 
-      for (int i = 0; i < totalQuestions; i++) {
-        header.add(TextCellValue('سوال ${i + 1}'));
+      for (int i = 0;
+          i < totalQuestions;
+          i++) {
+        header.add(
+          TextCellValue(
+            'سوال ${i + 1}',
+          ),
+        );
       }
 
-      header.add(TextCellValue('جواب درست'));
+      header.add(
+        TextCellValue('جواب درست'),
+      );
 
-      header.add(TextCellValue('تعداد سوالات'));
+      header.add(
+        TextCellValue('تعداد سوالات'),
+      );
 
-      header.add(TextCellValue('نمره'));
+      header.add(
+        TextCellValue('نمره'),
+      );
 
       sheet.appendRow(header);
 
@@ -344,9 +355,11 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
       // CREATE MAP
       // ========================================================
 
-      final Map<String, EvaluationModel> evaluationMap = {
+      final Map<String, EvaluationModel>
+          evaluationMap = {
         for (final evaluation in evaluations)
-          evaluation.studentName.trim(): evaluation,
+          evaluation.studentName.trim():
+              evaluation,
       };
 
       // ========================================================
@@ -360,18 +373,15 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         studentIndex < students.length;
         studentIndex++
       ) {
-        final String studentName = students[studentIndex].trim();
+        final String studentName =
+            students[studentIndex].trim();
 
-        final EvaluationModel? evaluation = evaluationMap[studentName];
-
-        // ======================================================
-        // EVALUATION NOT FOUND
-        // ======================================================
+        final EvaluationModel? evaluation =
+            evaluationMap[studentName];
 
         if (evaluation == null) {
           debugPrint(
-            'WARNING: Evaluation not found for '
-            '"$studentName"',
+            'WARNING: Evaluation not found for "$studentName"',
           );
 
           final List<CellValue> row = [
@@ -379,15 +389,27 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
             TextCellValue(studentName),
           ];
 
-          for (int i = 0; i < totalQuestions; i++) {
-            row.add(TextCellValue('-'));
+          for (
+            int i = 0;
+            i < totalQuestions;
+            i++
+          ) {
+            row.add(
+              TextCellValue('-'),
+            );
           }
 
-          row.add(IntCellValue(0));
+          row.add(
+            IntCellValue(0),
+          );
 
-          row.add(IntCellValue(totalQuestions));
+          row.add(
+            IntCellValue(totalQuestions),
+          );
 
-          row.add(TextCellValue('بدون ارزیابی'));
+          row.add(
+            TextCellValue('بدون ارزیابی'),
+          );
 
           sheet.appendRow(row);
 
@@ -414,8 +436,14 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
         ) {
           String answerLetter = '-';
 
-          if (questionIndex < evaluation.answers.length) {
-            final int answerIndex = evaluation.answers[questionIndex];
+          if (
+            questionIndex <
+            evaluation.answers.length
+          ) {
+            final int answerIndex =
+                evaluation.answers[
+                  questionIndex
+                ];
 
             switch (answerIndex) {
               case 0:
@@ -439,20 +467,30 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
             }
           }
 
-          row.add(TextCellValue(answerLetter));
+          row.add(
+            TextCellValue(answerLetter),
+          );
         }
 
         // ======================================================
         // CORRECT ANSWERS
         // ======================================================
 
-        row.add(IntCellValue(evaluation.correctAnswers));
+        row.add(
+          IntCellValue(
+            evaluation.correctAnswers,
+          ),
+        );
 
         // ======================================================
         // TOTAL QUESTIONS
         // ======================================================
 
-        row.add(IntCellValue(evaluation.totalQuestions));
+        row.add(
+          IntCellValue(
+            evaluation.totalQuestions,
+          ),
+        );
 
         // ======================================================
         // SCORE
@@ -464,10 +502,6 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
             '${evaluation.totalQuestions}',
           ),
         );
-
-        // ======================================================
-        // ADD ROW
-        // ======================================================
 
         sheet.appendRow(row);
 
@@ -487,34 +521,51 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
       sheet.setColumnWidth(1, 25);
 
-      for (int i = 2; i < totalQuestions + 2; i++) {
+      for (
+        int i = 2;
+        i < totalQuestions + 2;
+        i++
+      ) {
         sheet.setColumnWidth(i, 12);
       }
 
-      sheet.setColumnWidth(totalQuestions + 2, 15);
+      sheet.setColumnWidth(
+        totalQuestions + 2,
+        15,
+      );
 
-      sheet.setColumnWidth(totalQuestions + 3, 17);
+      sheet.setColumnWidth(
+        totalQuestions + 3,
+        17,
+      );
 
-      sheet.setColumnWidth(totalQuestions + 4, 15);
+      sheet.setColumnWidth(
+        totalQuestions + 4,
+        15,
+      );
 
       // ========================================================
       // ENCODE EXCEL
       // ========================================================
 
-      final List<int>? fileBytes = excel.encode();
+      final List<int>? fileBytes =
+          excel.encode();
 
       debugPrint(
-        'Excel rows exported: '
-        '$exportedRows',
+        'Excel rows exported: $exportedRows',
       );
 
       debugPrint(
-        'Excel bytes: '
-        '${fileBytes?.length ?? 0}',
+        'Excel bytes: ${fileBytes?.length ?? 0}',
       );
 
-      if (fileBytes == null || fileBytes.isEmpty) {
-        _showMessage('ساخت فایل اکسل ناموفق بود');
+      if (
+        fileBytes == null ||
+        fileBytes.isEmpty
+      ) {
+        _showMessage(
+          'ساخت فایل اکسل ناموفق بود',
+        );
         return;
       }
 
@@ -522,36 +573,55 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
       // SAVE FILE
       // ========================================================
 
-      final Directory directory = await getApplicationDocumentsDirectory();
+      final Directory directory =
+          await getApplicationDocumentsDirectory();
 
-      final String safeClassName = _safeFileName(widget.classModel.className);
+      final String safeClassName =
+          _safeFileName(
+        widget.classModel.className,
+      );
 
       final String fileName =
           'نتایج_${safeClassName}_'
           '${DateTime.now().millisecondsSinceEpoch}.xlsx';
 
-      final String filePath = '${directory.path}/$fileName';
+      final String filePath =
+          '${directory.path}/$fileName';
 
-      final File file = File(filePath);
+      final File file =
+          File(filePath);
 
-      await file.writeAsBytes(fileBytes, flush: true);
+      await file.writeAsBytes(
+        fileBytes,
+        flush: true,
+      );
 
       // ========================================================
       // VERIFY FILE
       // ========================================================
 
-      final bool exists = await file.exists();
+      final bool exists =
+          await file.exists();
 
-      final int fileSize = exists ? await file.length() : 0;
+      final int fileSize =
+          exists ? await file.length() : 0;
 
-      debugPrint('Excel file exists: $exists');
+      debugPrint(
+        'Excel file exists: $exists',
+      );
 
-      debugPrint('Excel file size: $fileSize');
+      debugPrint(
+        'Excel file size: $fileSize',
+      );
 
-      debugPrint('Excel path: $filePath');
+      debugPrint(
+        'Excel path: $filePath',
+      );
 
       if (!exists || fileSize == 0) {
-        _showMessage('فایل اکسل ذخیره نشد');
+        _showMessage(
+          'فایل اکسل ذخیره نشد',
+        );
         return;
       }
 
@@ -561,25 +631,34 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
       if (!mounted) return;
 
-      _showMessage('فایل اکسل با موفقیت ساخته شد');
+      _showMessage(
+        'فایل اکسل با موفقیت ساخته شد',
+      );
 
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(
+        const Duration(milliseconds: 500),
+      );
 
       if (!mounted) return;
 
       await OpenFilex.open(filePath);
     } catch (e, stackTrace) {
-      debugPrint('======================================');
-
-      debugPrint('Excel Export Error: $e');
-
+      debugPrint(
+        '======================================',
+      );
+      debugPrint(
+        'Excel Export Error: $e',
+      );
       debugPrint('$stackTrace');
-
-      debugPrint('======================================');
+      debugPrint(
+        '======================================',
+      );
 
       if (!mounted) return;
 
-      _showMessage('خطا در ساخت فایل اکسل');
+      _showMessage(
+        'خطا در ساخت فایل اکسل',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -594,7 +673,10 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   // ============================================================
 
   String _safeFileName(String name) {
-    return name.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+    return name.replaceAll(
+      RegExp(r'[<>:"/\\|?*]'),
+      '_',
+    );
   }
 
   // ============================================================
@@ -602,15 +684,20 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   // ============================================================
 
   String _formatDate(DateTime date) {
-    final String day = date.day.toString().padLeft(2, '0');
+    final String day =
+        date.day.toString().padLeft(2, '0');
 
-    final String month = date.month.toString().padLeft(2, '0');
+    final String month =
+        date.month.toString().padLeft(2, '0');
 
-    final String year = date.year.toString();
+    final String year =
+        date.year.toString();
 
-    final String hour = date.hour.toString().padLeft(2, '0');
+    final String hour =
+        date.hour.toString().padLeft(2, '0');
 
-    final String minute = date.minute.toString().padLeft(2, '0');
+    final String minute =
+        date.minute.toString().padLeft(2, '0');
 
     return '$year/$month/$day - '
         '$hour:$minute';
@@ -630,7 +717,10 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
           content: Text(
             message,
             textDirection: TextDirection.rtl,
-            style: GoogleFonts.notoSansArabic(),
+            style: GoogleFonts.vazirmatn(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+            ),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -641,10 +731,17 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   // STUDENT CARD
   // ============================================================
 
-  Widget _buildStudentCard(String studentName, int index) {
-    final bool isSelected = selectedIndex == index;
+  Widget _buildStudentCard(
+    String studentName,
+    int index,
+  ) {
+    final bool isSelected =
+        selectedIndex == index;
 
-    final bool isEvaluated = evaluatedStudents.contains(studentName.trim());
+    final bool isEvaluated =
+        evaluatedStudents.contains(
+      studentName.trim(),
+    );
 
     return GestureDetector(
       onTap: isEvaluated
@@ -655,25 +752,34 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
               });
             },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        duration:
+            const Duration(milliseconds: 200),
+        margin:
+            const EdgeInsets.only(bottom: 10),
+        padding:
+            const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius:
+              BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFF6655D9)
                 : isEvaluated
-                ? const Color(0xFFB7DFC0)
-                : const Color(0xFFE5E7EB),
+                    ? const Color(0xFFB7DFC0)
+                    : const Color(0xFFE5E7EB),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color:
+                  Colors.black.withOpacity(0.03),
               blurRadius: 8,
-              offset: const Offset(0, 3),
+              offset:
+                  const Offset(0, 3),
             ),
           ],
         ),
@@ -687,20 +793,20 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                 color: isEvaluated
                     ? const Color(0xFFE8F5E9)
                     : isSelected
-                    ? const Color(0xFFEAE7FF)
-                    : const Color(0xFFF1F3F5),
+                        ? const Color(0xFFEAE7FF)
+                        : const Color(0xFFF1F3F5),
                 shape: BoxShape.circle,
               ),
               child: Text(
                 '${index + 1}',
-                style: GoogleFonts.notoSansArabic(
+                style: GoogleFonts.vazirmatn(
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   color: isEvaluated
                       ? const Color(0xFF43A047)
                       : isSelected
-                      ? const Color(0xFF6655D9)
-                      : Colors.black87,
+                          ? const Color(0xFF6655D9)
+                          : Colors.black87,
                 ),
               ),
             ),
@@ -709,24 +815,29 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     studentName,
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.notoSansArabic(
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style: GoogleFonts.vazirmatn(
                       fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
 
                   const SizedBox(height: 3),
 
                   Text(
-                    isEvaluated ? 'ارزیابی تکمیل شده' : 'آماده برای ارزیابی',
-                    style: GoogleFonts.notoSansArabic(
+                    isEvaluated
+                        ? 'ارزیابی تکمیل شده'
+                        : 'آماده برای ارزیابی',
+                    style: GoogleFonts.vazirmatn(
                       fontSize: 11,
+                      fontWeight: FontWeight.w400,
                       color: isEvaluated
                           ? const Color(0xFF43A047)
                           : Colors.grey.shade600,
@@ -761,31 +872,37 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   }
 
   // ============================================================
-  // START BUTTON
+  // START EVALUATION BUTTON
   // ============================================================
 
   Widget _buildStartButton() {
-    final bool enabled = selectedIndex != null;
+    final bool enabled =
+        selectedIndex != null;
 
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: enabled ? continueToQuestions : null,
+        onPressed:
+            enabled ? continueToQuestions : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF6655D9),
-          disabledBackgroundColor: const Color(0xFFD9DDE3),
+          backgroundColor:
+              const Color(0xFF6655D9),
+          disabledBackgroundColor:
+              const Color(0xFFD9DDE3),
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+          shape:
+              RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(15),
           ),
         ),
         child: Text(
           'شروع ارزیابی',
-          style: GoogleFonts.notoSansArabic(
+          style: GoogleFonts.vazirmatn(
             color: Colors.white,
             fontSize: 14,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
@@ -793,38 +910,40 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
   }
 
   // ============================================================
-  // SMALL BUTTON
+  // EXPORT TO EXCEL BUTTON
   // ============================================================
 
-  Widget _buildSmallButton({
-    required String text,
-    required VoidCallback? onPressed,
-    required Color color,
-  }) {
-    final bool enabled = onPressed != null;
-
-    return Expanded(
-      child: SizedBox(
-        height: 48,
-        child: OutlinedButton(
-          onPressed: onPressed,
-          style: OutlinedButton.styleFrom(
-            backgroundColor: enabled ? color : Colors.grey.shade200,
-            side: BorderSide(
-              color: enabled ? color : Colors.grey.shade300,
-              width: 1,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
+  Widget _buildExcelButton(
+    bool enabled,
+  ) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed:
+            enabled && !isExporting
+                ? exportToExcel
+                : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor:
+              const Color(0xFF43A047),
+          disabledBackgroundColor:
+              const Color(0xFFD9DDE3),
+          elevation: 0,
+          shape:
+              RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(15),
           ),
-          child: Text(
-            text,
-            style: GoogleFonts.notoSansArabic(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: enabled ? Colors.white : Colors.grey,
-            ),
+        ),
+        child: Text(
+          isExporting
+              ? 'در حال ساخت...'
+              : 'تبدیل به اکسل',
+          style: GoogleFonts.vazirmatn(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
@@ -837,33 +956,43 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> students = widget.classModel.members;
+    final List<String> students =
+        widget.classModel.members;
 
     final bool allCompleted =
-        students.isNotEmpty && evaluatedStudents.length == students.length;
+        students.isNotEmpty &&
+        evaluatedStudents.length ==
+            students.length;
 
-    final int remaining = students.length - evaluatedStudents.length;
+    final int remaining =
+        students.length -
+        evaluatedStudents.length;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F8FC),
+        backgroundColor:
+            const Color(0xFFF5F8FC),
 
         appBar: AppBar(
-          backgroundColor: const Color(0xFFF5F8FC),
+          backgroundColor:
+              const Color(0xFFF5F8FC),
           elevation: 0,
           centerTitle: true,
 
           leading: IconButton(
             onPressed: goHome,
-            icon: const Icon(Icons.home_outlined, size: 24),
+            icon: const Icon(
+              Icons.home_outlined,
+              size: 24,
+            ),
           ),
 
           title: Text(
             'انتخاب شاگرد',
-            style: GoogleFonts.notoSansArabic(
+            style: GoogleFonts.vazirmatn(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
 
@@ -872,29 +1001,49 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              icon: const Icon(Icons.arrow_forward_rounded),
+              icon: const Icon(
+                Icons.arrow_forward_rounded,
+              ),
             ),
           ],
         ),
 
         body: isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(
+                child:
+                    CircularProgressIndicator(),
+              )
             : SafeArea(
                 child: Column(
                   children: [
+                    // ==================================================
+                    // CLASS INFORMATION
+                    // ==================================================
+
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                      padding:
+                          const EdgeInsets.fromLTRB(
+                        20,
+                        4,
+                        20,
+                        8,
+                      ),
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
+                        padding:
+                            const EdgeInsets.all(16),
+                        decoration:
+                            BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius:
+                              BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
+                              color: Colors.black
+                                  .withOpacity(0.03),
                               blurRadius: 10,
-                              offset: const Offset(0, 3),
+                              offset:
+                                  const Offset(0, 3),
                             ),
                           ],
                         ),
@@ -903,39 +1052,59 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                             Container(
                               width: 46,
                               height: 46,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEAE7FF),
-                                borderRadius: BorderRadius.circular(14),
+                              decoration:
+                                  BoxDecoration(
+                                color:
+                                    const Color(
+                                  0xFFEAE7FF,
+                                ),
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(14),
                               ),
                               child: const Icon(
                                 Icons.groups_rounded,
-                                color: Color(0xFF6655D9),
+                                color:
+                                    Color(0xFF6655D9),
                               ),
                             ),
 
-                            const SizedBox(width: 12),
+                            const SizedBox(
+                              width: 12,
+                            ),
 
                             Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment
+                                        .start,
                                 children: [
                                   Text(
-                                    widget.classModel.className,
-                                    style: GoogleFonts.notoSansArabic(
+                                    widget.classModel
+                                        .className,
+                                    style: GoogleFonts
+                                        .vazirmatn(
                                       fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight:
+                                          FontWeight.w500,
                                     ),
                                   ),
 
-                                  const SizedBox(height: 3),
+                                  const SizedBox(
+                                    height: 3,
+                                  ),
 
                                   Text(
                                     remaining == 0
                                         ? 'تمام شاگردان ارزیابی شده‌اند'
                                         : '$remaining شاگرد باقی مانده',
-                                    style: GoogleFonts.notoSansArabic(
+                                    style: GoogleFonts
+                                        .vazirmatn(
                                       fontSize: 11,
-                                      color: Colors.grey.shade600,
+                                      fontWeight:
+                                          FontWeight.w400,
+                                      color: Colors
+                                          .grey.shade600,
                                     ),
                                   ),
                                 ],
@@ -943,24 +1112,35 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                             ),
 
                             Container(
-                              padding: const EdgeInsets.symmetric(
+                              padding:
+                                  const EdgeInsets
+                                      .symmetric(
                                 horizontal: 11,
                                 vertical: 7,
                               ),
-                              decoration: BoxDecoration(
+                              decoration:
+                                  BoxDecoration(
                                 color: allCompleted
-                                    ? const Color(0xFFE8F5E9)
-                                    : const Color(0xFFF0EDFF),
-                                borderRadius: BorderRadius.circular(20),
+                                    ? const Color(
+                                        0xFFE8F5E9)
+                                    : const Color(
+                                        0xFFF0EDFF),
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(20),
                               ),
                               child: Text(
                                 '${evaluatedStudents.length}/${students.length}',
-                                style: GoogleFonts.notoSansArabic(
+                                style: GoogleFonts
+                                    .vazirmatn(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight:
+                                      FontWeight.w500,
                                   color: allCompleted
-                                      ? const Color(0xFF43A047)
-                                      : const Color(0xFF6655D9),
+                                      ? const Color(
+                                          0xFF43A047)
+                                      : const Color(
+                                          0xFF6655D9),
                                 ),
                               ),
                             ),
@@ -969,15 +1149,27 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                       ),
                     ),
 
+                    // ==================================================
+                    // STUDENTS TITLE
+                    // ==================================================
+
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+                      padding:
+                          const EdgeInsets.fromLTRB(
+                        20,
+                        6,
+                        20,
+                        6,
+                      ),
                       child: Row(
                         children: [
                           Text(
                             'شاگردان',
-                            style: GoogleFonts.notoSansArabic(
+                            style: GoogleFonts
+                                .vazirmatn(
                               fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                              fontWeight:
+                                  FontWeight.w500,
                             ),
                           ),
 
@@ -985,27 +1177,49 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
 
                           Text(
                             '${students.length} نفر',
-                            style: GoogleFonts.notoSansArabic(
+                            style: GoogleFonts
+                                .vazirmatn(
                               fontSize: 11,
-                              color: Colors.grey.shade600,
+                              fontWeight:
+                                  FontWeight.w400,
+                              color:
+                                  Colors.grey.shade600,
                             ),
                           ),
                         ],
                       ),
                     ),
 
+                    // ==================================================
+                    // STUDENTS LIST
+                    // ==================================================
+
                     Expanded(
                       child: students.isEmpty
                           ? Center(
                               child: Text(
                                 'هیچ شاگردی در این صنف وجود ندارد',
-                                style: GoogleFonts.notoSansArabic(fontSize: 14),
+                                style: GoogleFonts
+                                    .vazirmatn(
+                                  fontSize: 14,
+                                  fontWeight:
+                                      FontWeight.w400,
+                                ),
                               ),
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                              itemCount: students.length,
-                              itemBuilder: (context, index) {
+                              padding:
+                                  const EdgeInsets
+                                      .fromLTRB(
+                                20,
+                                4,
+                                20,
+                                12,
+                              ),
+                              itemCount:
+                                  students.length,
+                              itemBuilder:
+                                  (context, index) {
                                 return _buildStudentCard(
                                   students[index],
                                   index,
@@ -1014,11 +1228,23 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                             ),
                     ),
 
+                    // ==================================================
+                    // BOTTOM BUTTONS
+                    // ==================================================
+
                     Container(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-                      decoration: const BoxDecoration(
+                      padding:
+                          const EdgeInsets.fromLTRB(
+                        20,
+                        10,
+                        20,
+                        12,
+                      ),
+                      decoration:
+                          const BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.vertical(
+                        borderRadius:
+                            BorderRadius.vertical(
                           top: Radius.circular(22),
                         ),
                       ),
@@ -1026,30 +1252,12 @@ class _StudentSelectionScreenState extends State<StudentSelectionScreen> {
                         children: [
                           _buildStartButton(),
 
-                          const SizedBox(height: 8),
+                          const SizedBox(
+                            height: 10,
+                          ),
 
-                          Row(
-                            children: [
-                              _buildSmallButton(
-                                text: 'مشاهده نتایج',
-                                color: const Color(0xFFD32F2F),
-                                onPressed: evaluatedStudents.isEmpty
-                                    ? null
-                                    : openResults,
-                              ),
-
-                              const SizedBox(width: 8),
-
-                              _buildSmallButton(
-                                text: isExporting
-                                    ? 'در حال ساخت...'
-                                    : 'خروجی Excel',
-                                color: const Color(0xFF43A047),
-                                onPressed: allCompleted && !isExporting
-                                    ? exportToExcel
-                                    : null,
-                              ),
-                            ],
+                          _buildExcelButton(
+                            allCompleted,
                           ),
                         ],
                       ),
