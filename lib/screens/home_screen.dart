@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'class_list_screen.dart';
 import 'class_management_screen.dart';
 import 'excel_files_screen.dart';
-import 'question_management_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,9 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> openClassManagement() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const ClassManagementScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const ClassManagementScreen()),
     );
 
     if (!mounted) return;
@@ -48,9 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> openClassList() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const ClassListScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const ClassListScreen()),
     );
 
     if (!mounted) return;
@@ -65,9 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> openExcelFiles() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const ExcelFilesScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const ExcelFilesScreen()),
     );
 
     if (!mounted) return;
@@ -78,19 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // ============================================================
   // باز کردن صفحه سوالات
   // ============================================================
-
-  Future<void> openQuestionManagement() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const QuestionManagementScreen(),
-      ),
-    );
-
-    if (!mounted) return;
-
-    setState(() {});
-  }
 
   // ============================================================
   // BUILD
@@ -106,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
         // ========================================================
         // APP BAR
         // ========================================================
-
         appBar: AppBar(
           elevation: 0,
           backgroundColor: backgroundColor,
@@ -126,17 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
         // ========================================================
         // BODY
         // ========================================================
-
         body: SafeArea(
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
 
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              10,
-              20,
-              30,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
 
             child: Column(
               children: [
@@ -165,7 +138,6 @@ class _HomeScreenState extends State<HomeScreen> {
         // ========================================================
         // BOTTOM NAVIGATION
         // ========================================================
-
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: 0,
 
@@ -192,46 +164,23 @@ class _HomeScreenState extends State<HomeScreen> {
           // ======================================================
           // وقتی روی آیتم‌ها کلیک شود
           // ======================================================
-
-          onTap: (index) {
-            // خانه
-            if (index == 0) {
-              return;
-            }
-
-            // سوالات
-            if (index == 1) {
-              openQuestionManagement();
-              return;
-            }
-          },
-
           items: const [
             // ====================================================
             // خانه
             // ====================================================
 
             BottomNavigationBarItem(
-              icon: Icon(
-                Icons.home_rounded,
-              ),
-              activeIcon: Icon(
-                Icons.home_rounded,
-              ),
+              icon: Icon(Icons.home_rounded),
+              activeIcon: Icon(Icons.home_rounded),
               label: 'خانه',
             ),
 
             // ====================================================
             // سوالات
             // ====================================================
-
             BottomNavigationBarItem(
-              icon: Icon(
-                Icons.quiz_rounded,
-              ),
-              activeIcon: Icon(
-                Icons.quiz_rounded,
-              ),
+              icon: Icon(Icons.quiz_rounded),
+              activeIcon: Icon(Icons.quiz_rounded),
               label: 'سوالات',
             ),
           ],
@@ -252,10 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            primaryBlue,
-            lightBlue,
-          ],
+          colors: [primaryBlue, lightBlue],
 
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
@@ -293,9 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: GoogleFonts.vazirmatn(
                     fontSize: 13,
                     height: 1.7,
-                    color: Colors.white.withValues(
-                      alpha: 0.9,
-                    ),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -304,11 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(width: 12),
 
-          const Icon(
-            Icons.school_rounded,
-            size: 60,
-            color: Colors.white,
-          ),
+          const Icon(Icons.school_rounded, size: 60, color: Colors.white),
         ],
       ),
     );
@@ -377,32 +317,20 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           width: double.infinity,
 
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 20,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
 
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
 
-            border: Border.all(
-              color: Colors.grey.withValues(
-                alpha: 0.10,
-              ),
-            ),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.10)),
 
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(
-                  alpha: 0.04,
-                ),
+                color: Colors.black.withValues(alpha: 0.04),
 
                 blurRadius: 12,
 
-                offset: const Offset(
-                  0,
-                  4,
-                ),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -422,18 +350,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 48,
 
                   decoration: BoxDecoration(
-                    color: iconColor.withValues(
-                      alpha: 0.10,
-                    ),
+                    color: iconColor.withValues(alpha: 0.10),
 
                     borderRadius: BorderRadius.circular(14),
                   ),
 
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 27,
-                  ),
+                  child: Icon(icon, color: iconColor, size: 27),
                 ),
 
                 const SizedBox(width: 14),
@@ -441,7 +363,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==================================================
                 // متن سمت راست
                 // ==================================================
-
                 Expanded(
                   child: Directionality(
                     textDirection: TextDirection.rtl,
