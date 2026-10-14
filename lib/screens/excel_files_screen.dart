@@ -70,15 +70,11 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
       final files = directory
           .listSync()
           .whereType<File>()
-          .where(
-            (file) => file.path.toLowerCase().endsWith('.xlsx'),
-          )
+          .where((file) => file.path.toLowerCase().endsWith('.xlsx'))
           .toList();
 
       files.sort(
-        (a, b) => b.lastModifiedSync().compareTo(
-          a.lastModifiedSync(),
-        ),
+        (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
       );
 
       if (!mounted) return;
@@ -110,9 +106,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
           content: Text(
             'فایل پیدا نشد.',
             textDirection: TextDirection.rtl,
-            style: _font(
-              color: Colors.white,
-            ),
+            style: _font(color: Colors.white),
           ),
         ),
       );
@@ -138,9 +132,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
             content: Text(
               'فایل پیدا نشد.',
               textDirection: TextDirection.rtl,
-              style: _font(
-                color: Colors.white,
-              ),
+              style: _font(color: Colors.white),
             ),
           ),
         );
@@ -155,8 +147,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
         [
           XFile(
             file.path,
-            mimeType:
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           ),
         ],
         subject: 'نتایج $className',
@@ -171,9 +162,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
           content: Text(
             'اشتراک‌گذاری فایل انجام نشد.',
             textDirection: TextDirection.rtl,
-            style: _font(
-              color: Colors.white,
-            ),
+            style: _font(color: Colors.white),
           ),
         ),
       );
@@ -200,10 +189,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
             title: Text(
               'حذف فایل',
               textAlign: TextAlign.right,
-              style: _font(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
+              style: _font(fontSize: 18, fontWeight: FontWeight.w500),
             ),
             content: Text(
               'آیا مطمئن هستید که فایل «$className» حذف شود؟',
@@ -265,9 +251,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
       if (!mounted) return;
 
       setState(() {
-        excelFiles.removeWhere(
-          (item) => item.path == file.path,
-        );
+        excelFiles.removeWhere((item) => item.path == file.path);
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -276,9 +260,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
           content: Text(
             'فایل با موفقیت حذف شد.',
             textDirection: TextDirection.rtl,
-            style: _font(
-              color: Colors.white,
-            ),
+            style: _font(color: Colors.white),
           ),
         ),
       );
@@ -291,9 +273,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
           content: Text(
             'حذف فایل انجام نشد.',
             textDirection: TextDirection.rtl,
-            style: _font(
-              color: Colors.white,
-            ),
+            style: _font(color: Colors.white),
           ),
         ),
       );
@@ -312,17 +292,10 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
         return Directionality(
           textDirection: TextDirection.rtl,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              12,
-              20,
-              25,
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 25),
             decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: SafeArea(
               child: Column(
@@ -343,10 +316,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: _font(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: _font(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
 
                   const SizedBox(height: 18),
@@ -373,18 +343,12 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                     title: Text(
                       'اشتراک‌گذاری',
                       textAlign: TextAlign.right,
-                      style: _font(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: _font(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     subtitle: Text(
                       'ارسال فایل Excel',
                       textAlign: TextAlign.right,
-                      style: _font(
-                        fontSize: 11,
-                        color: secondaryTextColor,
-                      ),
+                      style: _font(fontSize: 11, color: secondaryTextColor),
                     ),
                   ),
 
@@ -419,10 +383,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                     subtitle: Text(
                       'حذف دائمی فایل Excel',
                       textAlign: TextAlign.right,
-                      style: _font(
-                        fontSize: 11,
-                        color: secondaryTextColor,
-                      ),
+                      style: _font(fontSize: 11, color: secondaryTextColor),
                     ),
                   ),
                 ],
@@ -441,20 +402,11 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
   String _getClassName(File file) {
     String name = file.path.split('/').last;
 
-    name = name.replaceFirst(
-      RegExp(r'\.xlsx$'),
-      '',
-    );
+    name = name.replaceFirst(RegExp(r'\.xlsx$'), '');
 
-    name = name.replaceFirst(
-      'نتایج_',
-      '',
-    );
+    name = name.replaceFirst('نتایج_', '');
 
-    name = name.replaceFirst(
-      RegExp(r'\_(\d{10,})$'),
-      '',
-    );
+    name = name.replaceFirst(RegExp(r'\_(\d{10,})$'), '');
 
     return name;
   }
@@ -490,7 +442,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
         // ======================================================
         // APP BAR
         // ======================================================
-
         appBar: AppBar(
           elevation: 0,
           backgroundColor: backgroundColor,
@@ -506,21 +457,14 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
           ),
           title: Text(
             'فایل‌های Excel',
-            style: _font(
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
-            ),
+            style: _font(fontSize: 20, fontWeight: FontWeight.w500),
           ),
         ),
 
         // ======================================================
         // BODY
         // ======================================================
-
-        body: RefreshIndicator(
-          onRefresh: _loadExcelFiles,
-          child: _buildBody(),
-        ),
+        body: RefreshIndicator(onRefresh: _loadExcelFiles, child: _buildBody()),
       ),
     );
   }
@@ -531,29 +475,20 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
 
   Widget _buildBody() {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (excelFiles.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(20),
-        children: [
-          _buildEmptyExcelCard(),
-        ],
+        children: [_buildEmptyExcelCard()],
       );
     }
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        10,
-        20,
-        30,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       children: [
         // ======================================================
         // HEADER
@@ -569,29 +504,19 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                   Text(
                     'تمام فایل‌های Excel',
                     textAlign: TextAlign.right,
-                    style: _font(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: _font(fontSize: 18, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${excelFiles.length} فایل خروجی',
                     textAlign: TextAlign.right,
-                    style: _font(
-                      fontSize: 12,
-                      color: secondaryTextColor,
-                    ),
+                    style: _font(fontSize: 12, color: secondaryTextColor),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 10),
-            const Icon(
-              Icons.table_chart_rounded,
-              color: excelGreen,
-              size: 25,
-            ),
+            const Icon(Icons.table_chart_rounded, color: excelGreen, size: 25),
           ],
         ),
 
@@ -600,7 +525,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
         // ======================================================
         // ALL FILES
         // ======================================================
-
         ...excelFiles.map(
           (file) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -623,16 +547,11 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
         borderRadius: BorderRadius.circular(18),
         child: Ink(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: excelGreen.withOpacity(0.15),
-            ),
+            border: Border.all(color: excelGreen.withOpacity(0.15)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.035),
@@ -667,7 +586,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
               // ==================================================
               // OPEN FILE
               // ==================================================
-
               SizedBox(
                 width: 42,
                 height: 48,
@@ -689,7 +607,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
               // ==================================================
               // FILE NAME + DATE
               // ==================================================
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -698,17 +615,11 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                       file.path
                           .split('/')
                           .last
-                          .replaceFirst(
-                            RegExp(r'\.xlsx$'),
-                            '',
-                          ),
+                          .replaceFirst(RegExp(r'\.xlsx$'), ''),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _font(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                      ),
+                      style: _font(fontSize: 15, fontWeight: FontWeight.w400),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -729,7 +640,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
               // ==================================================
               // EXCEL ICON
               // ==================================================
-
               Container(
                 width: 48,
                 height: 48,
@@ -757,16 +667,11 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
   Widget _buildEmptyExcelCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 35,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 35),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.12),
-        ),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
       ),
       child: Column(
         children: [
@@ -793,14 +698,10 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
           // ======================================================
           // TITLE
           // ======================================================
-
           Text(
             'هنوز فایل Excel ایجاد نشده است',
             textAlign: TextAlign.center,
-            style: _font(
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-            ),
+            style: _font(fontSize: 15, fontWeight: FontWeight.w400),
           ),
 
           const SizedBox(height: 6),
@@ -808,7 +709,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
           // ======================================================
           // DESCRIPTION
           // ======================================================
-
           Text(
             'بعد از ارزیابی شاگردان، فایل‌های خروجی اینجا نمایش داده می‌شوند.',
             textAlign: TextAlign.center,

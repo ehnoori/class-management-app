@@ -6,7 +6,7 @@ part 'evaluation_model.g.dart';
 class EvaluationModel {
   Id id = Isar.autoIncrement;
 
-  /// شناسه صنف
+  /// شناسه صنف؛ هر ارزیابی به یک صنف مشخص تعلق دارد.
   late int classId;
 
   /// نام صنف
@@ -15,22 +15,16 @@ class EvaluationModel {
   /// نام شاگرد
   late String studentName;
 
-  /// پاسخ‌های 13 سؤال
-  ///
-  /// مثال:
-  /// A
-  /// 3
-  /// بلی
-  /// پروژه Flutter
+  /// پاسخ‌های پرسش‌نامه به شکل متن ذخیره می‌شوند.
+  /// مثال: یک ساعت، 3، بلی، نام پروژه
   late List<String> answers;
 
   /// تعداد سوالات
   late int totalQuestions;
 
-  /// برای سازگاری با ساختار قبلی
-  /// چون این پرسش‌نامه جواب درست/غلط ندارد همیشه 0 است.
+  /// این پرسش‌نامه پاسخ درست یا غلط ندارد.
   int correctAnswers = 0;
 
-  /// تاریخ انجام ارزیابی
+  /// تاریخ و زمان انجام ارزیابی
   late DateTime evaluatedAt;
 }

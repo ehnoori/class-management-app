@@ -7,10 +7,6 @@ import '../models/evaluation_model.dart';
 class IsarService {
   static Isar? _isar;
 
-  // ============================================================
-  // GET ISAR INSTANCE
-  // ============================================================
-
   static Future<Isar> getInstance() async {
     if (_isar != null && _isar!.isOpen) {
       return _isar!;
@@ -26,12 +22,15 @@ class IsarService {
     return _isar!;
   }
 
-  // ============================================================
-  // SAVE EVALUATION
-  // ============================================================
-
+  // ذخیره ارزیابی
   static Future<void> saveEvaluation(EvaluationModel evaluation) async {
     final isar = await getInstance();
+
+    final cleanName = evaluation.studentName.trim();
+
+    if (cleanName.isEmpty) {
+      throw Exception('نام شاگرد الزامی است.');
+    }
 
     await isar.writeTxn(() async {
       await isar.evaluationModels.put(evaluation);
@@ -40,34 +39,23 @@ class IsarService {
     final saved = await isar.evaluationModels.get(evaluation.id);
 
     if (saved == null) {
-      throw Exception('Evaluation was not saved');
+      throw Exception('ذخیره ارزیابی ناموفق بود.');
     }
   }
 
-  // ============================================================
-  // GET ALL CLASSES
-  // ============================================================
-
+  // دریافت تمام صنف‌ها
   static Future<List<ClassModel>> getAllClasses() async {
     final isar = await getInstance();
-
-    return await isar.classModels.where().findAll();
+    return isar.classModels.where().findAll();
   }
 
-  // ============================================================
-  // GET ALL EVALUATIONS
-  // ============================================================
-
+  // دریافت تمام ارزیابی‌ها
   static Future<List<EvaluationModel>> getAllEvaluations() async {
     final isar = await getInstance();
-
-    return await isar.evaluationModels.where().findAll();
+    return isar.evaluationModels.where().findAll();
   }
 
-  // ============================================================
-  // GET CLASS EVALUATIONS
-  // ============================================================
-
+  // دریافت ارزیابی‌های یک صنف مشخص
   static Future<List<EvaluationModel>> getClassEvaluations(int classId) async {
     final isar = await getInstance();
 
@@ -81,29 +69,33 @@ class IsarService {
     return evaluations;
   }
 
-  // ============================================================
-  // GET STUDENT EVALUATION IN SPECIFIC CLASS
-  // ============================================================
-
+  // دریافت ارزیابی شاگرد در یک صنف مشخص
   static Future<EvaluationModel?> getStudentEvaluation(
     int classId,
     String studentName,
   ) async {
     final isar = await getInstance();
-
     final cleanName = studentName.trim();
 
-    return await isar.evaluationModels
+    if (cleanName.isEmpty) {
+      return null;
+    }
+
+    final evaluations = await isar.evaluationModels
         .filter()
         .classIdEqualTo(classId)
-        .studentNameEqualTo(cleanName)
-        .findFirst();
+        .findAll();
+
+    for (final evaluation in evaluations) {
+      if (evaluation.studentName.trim() == cleanName) {
+        return evaluation;
+      }
+    }
+
+    return null;
   }
 
-  // ============================================================
-  // CHECK STUDENT EVALUATED IN SPECIFIC CLASS
-  // ============================================================
-
+  // بررسی ارزیابی شاگرد در همان صنف
   static Future<bool> isStudentEvaluated(
     int classId,
     String studentName,
@@ -113,23 +105,14 @@ class IsarService {
     return evaluation != null;
   }
 
-  // ============================================================
-  // DELETE STUDENT EVALUATION FROM SPECIFIC CLASS
-  // ============================================================
-
+  // حذف ارزیابی شاگرد از یک صنف
   static Future<void> deleteStudentEvaluation(
     int classId,
     String studentName,
   ) async {
     final isar = await getInstance();
 
-    final cleanName = studentName.trim();
-
-    final evaluation = await isar.evaluationModels
-        .filter()
-        .classIdEqualTo(classId)
-        .studentNameEqualTo(cleanName)
-        .findFirst();
+    final evaluation = await getStudentEvaluation(classId, studentName);
 
     if (evaluation == null) {
       return;
@@ -140,10 +123,7 @@ class IsarService {
     });
   }
 
-  // ============================================================
-  // DELETE ALL EVALUATIONS OF SPECIFIC CLASS
-  // ============================================================
-
+  // حذف تمام ارزیابی‌های یک صنف
   static Future<void> deleteClassEvaluations(int classId) async {
     final isar = await getInstance();
 

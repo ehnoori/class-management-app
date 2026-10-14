@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -13,11 +14,9 @@ class ClassManagementScreen extends StatefulWidget {
       _ClassManagementScreenState();
 }
 
-class _ClassManagementScreenState extends State<ClassManagementScreen> {
-  // ============================================================
+class _ClassManagementScreenState
+    extends State<ClassManagementScreen> {
   // Controllers
-  // ============================================================
-
   final TextEditingController classNameController =
       TextEditingController();
 
@@ -30,15 +29,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
   final TextEditingController memberController =
       TextEditingController();
 
-  // ============================================================
   // Members
-  // ============================================================
-
   final List<String> members = [];
 
-  // ============================================================
-  // Dispose
-  // ============================================================
+  bool isSaving = false;
 
   @override
   void dispose() {
@@ -46,19 +40,36 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     teacherController.dispose();
     classTimeController.dispose();
     memberController.dispose();
-
     super.dispose();
   }
 
-  // ============================================================
-  // Add Member
-  // ============================================================
+  // یکسان‌سازی نام برای تشخیص نام‌های تکراری
+  String _normalizeName(String name) {
+    return name
+        .trim()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .toLowerCase();
+  }
 
+  // افزودن عضو
   void addMember() {
-    final String memberName = memberController.text.trim();
+    final String memberName = memberController.text
+        .trim()
+        .replaceAll(RegExp(r'\s+'), ' ');
 
     if (memberName.isEmpty) {
       _showMessage('لطفاً نام عضو را وارد کنید');
+      return;
+    }
+
+    final normalizedName = _normalizeName(memberName);
+
+    final alreadyExists = members.any(
+      (member) => _normalizeName(member) == normalizedName,
+    );
+
+    if (alreadyExists) {
+      _showMessage('این شاگرد قبلاً به صنف اضافه شده است');
       return;
     }
 
@@ -68,28 +79,20 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     });
   }
 
-  // ============================================================
-  // Remove Member
-  // ============================================================
-
+  // حذف عضو
   void removeMember(int index) {
     setState(() {
       members.removeAt(index);
     });
   }
 
-  // ============================================================
-  // Save Class
-  // ============================================================
-
+  // ذخیره صنف
   Future<void> saveClass() async {
+    if (isSaving) return;
+
     final String className = classNameController.text.trim();
     final String teacherName = teacherController.text.trim();
     final String classTime = classTimeController.text.trim();
-
-    // ------------------------------------------------------------
-    // Validation
-    // ------------------------------------------------------------
 
     if (className.isEmpty) {
       _showMessage('لطفاً نام صنف را وارد کنید');
@@ -111,79 +114,100 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
       return;
     }
 
-    // ------------------------------------------------------------
-    // Create Class Model
-    // ------------------------------------------------------------
+    // بررسی دوباره نام‌های تکراری
+    final normalizedMembers =
+        members.map(_normalizeName).toList();
 
-    final ClassModel newClass = ClassModel()
-      ..className = className
-      ..teacherName = teacherName
-      ..classTime = classTime
-      ..members = List<String>.from(members);
+    if (normalizedMembers.toSet().length !=
+        normalizedMembers.length) {
+      _showMessage('نام تکراری در فهرست شاگردان وجود دارد');
+      return;
+    }
 
-    // ------------------------------------------------------------
-    // Save to Isar
-    // ------------------------------------------------------------
+    setState(() {
+      isSaving = true;
+    });
 
     try {
+      final ClassModel newClass = ClassModel()
+        ..className = className
+        ..teacherName = teacherName
+        ..classTime = classTime
+        ..members = List<String>.from(members);
+
       final isar = await IsarService.getInstance();
 
       await isar.writeTxn(() async {
         await isar.classModels.put(newClass);
       });
 
+      // اطمینان از ذخیره شدن صنف
+      final savedClass =
+          await isar.classModels.get(newClass.id);
+
+      if (savedClass == null) {
+        throw Exception('صنف در دیتابیس ذخیره نشد');
+      }
+
       if (!mounted) return;
 
+      // انتقال همان صنف ذخیره‌شده به صفحه انتخاب شاگرد
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              StudentSelectionScreen(classModel: newClass),
+          builder: (_) => StudentSelectionScreen(
+            classModel: savedClass,
+          ),
         ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Save Class Error: $e');
+      debugPrint('$stackTrace');
+
       if (!mounted) return;
 
-      _showMessage('خطا در ذخیره صنف: $e');
+      _showMessage('خطا در ذخیره صنف');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSaving = false;
+        });
+      }
     }
   }
 
-  // ============================================================
-  // Message
-  // ============================================================
-
+  // نمایش پیام
   void _showMessage(
     String message, {
     bool success = false,
   }) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          textDirection: TextDirection.rtl,
-          style: GoogleFonts.vazirmatn(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            textDirection: TextDirection.rtl,
+            style: GoogleFonts.vazirmatn(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          backgroundColor: success
+              ? const Color(0xFF27AE60)
+              : const Color(0xFFE74C3C),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
-        backgroundColor: success
-            ? const Color(0xFF27AE60)
-            : const Color(0xFFE74C3C),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-      ),
-    );
+      );
   }
 
-  // ============================================================
-  // Label
-  // ============================================================
-
+  // عنوان فیلد
   Widget _label(String text) {
     return Align(
       alignment: Alignment.centerRight,
@@ -199,10 +223,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     );
   }
 
-  // ============================================================
-  // Text Field
-  // ============================================================
-
+  // فیلد متنی
   Widget _textField({
     required TextEditingController controller,
     required String hintText,
@@ -258,17 +279,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     );
   }
 
-  // ============================================================
-  // Member Input
-  // ============================================================
-
+  // ورودی افزودن عضو
   Widget _memberInput() {
     return Row(
       children: [
-        // --------------------------------------------------------
-        // Add Button - Left
-        // --------------------------------------------------------
-
         Container(
           height: 55,
           width: 55,
@@ -284,13 +298,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
             ),
           ),
         ),
-
         const SizedBox(width: 10),
-
-        // --------------------------------------------------------
-        // Member TextField
-        // --------------------------------------------------------
-
         Expanded(
           child: _textField(
             controller: memberController,
@@ -302,10 +310,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     );
   }
 
-  // ============================================================
-  // Member List
-  // ============================================================
-
+  // فهرست اعضا
   Widget _buildMembersList() {
     if (members.isEmpty) {
       return Container(
@@ -351,21 +356,9 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                 color: const Color(0xFFE5EAF0),
               ),
             ),
-
-            // ----------------------------------------------------
-            // RTL:
-            // Left  = Delete
-            // Center = Member name
-            // Right = Person icon
-            // ----------------------------------------------------
-
             child: Row(
               textDirection: TextDirection.rtl,
               children: [
-                // ==================================================
-                // Person Icon - Right
-                // ==================================================
-
                 Container(
                   height: 38,
                   width: 38,
@@ -379,13 +372,7 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                     size: 21,
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
-                // ==================================================
-                // Member Name - Center
-                // ==================================================
-
                 Expanded(
                   child: Text(
                     member,
@@ -400,18 +387,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 8),
-
-                // ==================================================
-                // Delete Icon - Left
-                // ==================================================
-
                 IconButton(
                   tooltip: 'حذف عضو',
-                  onPressed: () {
-                    removeMember(index);
-                  },
+                  onPressed: () => removeMember(index),
                   icon: const Icon(
                     Icons.delete_outline_rounded,
                     color: Color(0xFFE74C3C),
@@ -426,10 +405,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
     );
   }
 
-  // ============================================================
-  // Build
-  // ============================================================
-
   @override
   Widget build(BuildContext context) {
     final double screenWidth =
@@ -439,16 +414,10 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xFFF3F7FC),
-
-        // ========================================================
-        // AppBar
-        // ========================================================
-
         appBar: AppBar(
           elevation: 0,
           backgroundColor: const Color(0xFFF3F7FC),
           centerTitle: true,
-
           title: Text(
             'مشخصات صنف',
             style: GoogleFonts.vazirmatn(
@@ -457,7 +426,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
               color: const Color(0xFF263238),
             ),
           ),
-
           leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
@@ -469,11 +437,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
             ),
           ),
         ),
-
-        // ========================================================
-        // Body
-        // ========================================================
-
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(
@@ -483,81 +446,49 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ==================================================
-                // Class Name
-                // ==================================================
-
                 _label('نام صنف :'),
-
                 const SizedBox(height: 8),
-
                 _textField(
                   controller: classNameController,
                   hintText: 'مثال: علوم کامپیوتر',
                   icon: Icons.class_rounded,
                 ),
-
                 const SizedBox(height: 17),
 
-                // ==================================================
-                // Teacher Name
-                // ==================================================
-
                 _label('نام استاد :'),
-
                 const SizedBox(height: 8),
-
                 _textField(
                   controller: teacherController,
                   hintText: 'نام استاد را وارد کنید',
                   icon: Icons.person_rounded,
                 ),
-
                 const SizedBox(height: 17),
 
-                // ==================================================
-                // Class Time
-                // ==================================================
-
                 _label('تایم درسی :'),
-
                 const SizedBox(height: 8),
-
                 _textField(
                   controller: classTimeController,
                   hintText: 'مثلاً 1 - 2 یا 1 تا 3',
                   icon: Icons.access_time_rounded,
                 ),
-
                 const SizedBox(height: 22),
 
-                // ==================================================
-                // Members
-                // ==================================================
-
                 _label('   اعضای صنف : '),
-
                 const SizedBox(height: 8),
-
                 _memberInput(),
-
                 const SizedBox(height: 12),
-
                 _buildMembersList(),
-
                 const SizedBox(height: 28),
-
-                // ==================================================
-                // Save Class Button
-                // ==================================================
 
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: saveClass,
+                    onPressed: isSaving ? null : saveClass,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6C63FF),
+                      disabledBackgroundColor:
+                          const Color(0xFF9E98F5),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
@@ -567,19 +498,17 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       textDirection: TextDirection.rtl,
                       children: [
-                        // Text
                         Text(
-                          'ذخیره صنف',
+                          isSaving
+                              ? 'در حال ذخیره...'
+                              : 'ذخیره صنف',
                           style: GoogleFonts.vazirmatn(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                             color: Colors.white,
                           ),
                         ),
-
                         const SizedBox(width: 10),
-
-                        // Icon - Left of text
                         const Icon(
                           Icons.save_rounded,
                           color: Colors.white,
@@ -589,7 +518,6 @@ class _ClassManagementScreenState extends State<ClassManagementScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 25),
               ],
             ),
