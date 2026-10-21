@@ -345,11 +345,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                       textAlign: TextAlign.right,
                       style: _font(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
-                    subtitle: Text(
-                      'ارسال فایل Excel',
-                      textAlign: TextAlign.right,
-                      style: _font(fontSize: 11, color: secondaryTextColor),
-                    ),
                   ),
 
                   // DELETE
@@ -379,11 +374,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                         fontWeight: FontWeight.w400,
                         color: Colors.red,
                       ),
-                    ),
-                    subtitle: Text(
-                      'حذف دائمی فایل Excel',
-                      textAlign: TextAlign.right,
-                      style: _font(fontSize: 11, color: secondaryTextColor),
                     ),
                   ),
                 ],
@@ -494,34 +484,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
         // HEADER
         // ======================================================
 
-        Row(
-          textDirection: TextDirection.rtl,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'تمام فایل‌های Excel',
-                    textAlign: TextAlign.right,
-                    style: _font(fontSize: 18, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${excelFiles.length} فایل خروجی',
-                    textAlign: TextAlign.right,
-                    style: _font(fontSize: 12, color: secondaryTextColor),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Icon(Icons.table_chart_rounded, color: excelGreen, size: 25),
-          ],
-        ),
-
-        const SizedBox(height: 16),
-
         // ======================================================
         // ALL FILES
         // ======================================================
@@ -539,15 +501,15 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
   // EXCEL FILE CARD
   // ============================================================
 
-  Widget _buildExcelFileCard(File file) {
+   Widget _buildExcelFileCard(File file) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _openExcelFile(file),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(10),
         child: Ink(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
@@ -563,53 +525,27 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
           child: Row(
             textDirection: TextDirection.rtl,
             children: [
-              // ==================================================
-              // THREE DOTS
-              // ==================================================
-
-              SizedBox(
-                width: 42,
+              // EXCEL ICON - اول
+              Container(
+                width: 48,
                 height: 48,
-                child: IconButton(
-                  tooltip: 'گزینه‌ها',
-                  onPressed: () {
-                    _showFileMenu(file);
-                  },
-                  icon: const Icon(
-                    Icons.more_vert_rounded,
-                    color: secondaryTextColor,
-                    size: 25,
-                  ),
+                decoration: BoxDecoration(
+                  color: excelGreen.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-              ),
-
-              // ==================================================
-              // OPEN FILE
-              // ==================================================
-              SizedBox(
-                width: 42,
-                height: 48,
-                child: IconButton(
-                  tooltip: 'باز کردن فایل',
-                  onPressed: () {
-                    _openExcelFile(file);
-                  },
-                  icon: const Icon(
-                    Icons.open_in_new_rounded,
-                    color: secondaryTextColor,
-                    size: 23,
-                  ),
+                child: const Icon(
+                  Icons.description_rounded,
+                  color: excelGreen,
+                  size: 27,
                 ),
               ),
 
               const SizedBox(width: 8),
 
-              // ==================================================
-              // FILE NAME + DATE
-              // ==================================================
+              // FILE NAME + DATE - وسط
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start  ,
                   children: [
                     Text(
                       file.path
@@ -619,7 +555,10 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _font(fontSize: 15, fontWeight: FontWeight.w400),
+                      style: _font(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -635,22 +574,20 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
                 ),
               ),
 
-              const SizedBox(width: 8),
-
-              // ==================================================
-              // EXCEL ICON
-              // ==================================================
-              Container(
-                width: 48,
+              // THREE DOTS - آخر
+              SizedBox(
+                width: 42,
                 height: 48,
-                decoration: BoxDecoration(
-                  color: excelGreen.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.description_rounded,
-                  color: excelGreen,
-                  size: 27,
+                child: IconButton(
+                  tooltip: 'گزینه‌ها',
+                  onPressed: () {
+                    _showFileMenu(file);
+                  },
+                  icon: const Icon(
+                    Icons.more_vert_rounded,
+                    color: secondaryTextColor,
+                    size: 25,
+                  ),
                 ),
               ),
             ],
@@ -659,7 +596,6 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
       ),
     );
   }
-
   // ============================================================
   // EMPTY EXCEL CARD
   // ============================================================
@@ -693,7 +629,7 @@ class _ExcelFilesScreenState extends State<ExcelFilesScreen> {
             ),
           ),
 
-          const SizedBox(height: 15),
+          const SizedBox(height: 8),
 
           // ======================================================
           // TITLE

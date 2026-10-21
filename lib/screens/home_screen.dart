@@ -259,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required double screenHeight,
   }) {
     return _buildMenuCard(
-      title: 'لیست تمام صنوف ایجاد شده',
+      title: 'لیست صنوف ',
       icon: Icons.groups_rounded,
       iconColor: purple,
       screenWidth: screenWidth,
@@ -274,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required double screenHeight,
   }) {
     return _buildMenuCard(
-      title: 'فایل‌های تبدیل شده به اکسل',
+      title: 'نتایج',
       icon: Icons.table_chart_rounded,
       iconColor: excelGreen,
       screenWidth: screenWidth,
