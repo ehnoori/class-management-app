@@ -9,6 +9,8 @@ import '../database/isar_service.dart';
 import '../models/class_model.dart';
 import '../models/evaluation_model.dart';
 import 'evaluation_screen.dart';
+// ✅ این ایمپورت را حتماً اضافه کنید
+import '../services/excel_export_service.dart';
 
 class ClassListScreen extends StatefulWidget {
   const ClassListScreen({super.key});
@@ -235,18 +237,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
   }
 
   // ============================================================
-  // SAFE FILE NAME
-  // ============================================================
-
-  String _safeFileName(String value) {
-    return value
-        .trim()
-        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-        .replaceAll(RegExp(r'\s+'), ' ');
-  }
-
-  // ============================================================
-  // EXPORT TO EXCEL
+  // EXPORT TO EXCEL (اصلاح شده)
   // ============================================================
 
   Future<void> _exportToExcel(ClassModel classModel) async {
@@ -284,180 +275,17 @@ class _ClassListScreenState extends State<ClassListScreen> {
       // ========================================================
       // GET ALL EVALUATIONS
       // ========================================================
-
       final evaluations = await IsarService.getClassEvaluations(classModel.id);
 
       if (evaluations.isEmpty) {
         throw Exception('هنوز هیچ نتیجه‌ای برای این صنف ثبت نشده است.');
       }
 
-      // ========================================================
-      // CREATE EXCEL
-      // ========================================================
-
-      final excel = Excel.createExcel();
-
-      final defaultSheet = excel.getDefaultSheet();
-
-      if (defaultSheet != null) {
-        excel.delete(defaultSheet);
-      }
-
-      final sheet = excel['نتایج پرسشنامه'];
-
-      // ========================================================
-      // CLASS INFORMATION
-      // ========================================================
-
-      sheet.appendRow([TextCellValue('نتایج ارزیابی صنف')]);
-
-      sheet.appendRow([
-        TextCellValue('نام صنف'),
-        TextCellValue(classModel.className),
-      ]);
-
-      sheet.appendRow([
-        TextCellValue('استاد'),
-        TextCellValue(classModel.teacherName),
-      ]);
-
-      sheet.appendRow([
-        TextCellValue('زمان صنف'),
-        TextCellValue(classModel.classTime),
-      ]);
-
-      sheet.appendRow([
-        TextCellValue('تعداد کل شاگردان'),
-        IntCellValue(classModel.members.length),
-      ]);
-
-      sheet.appendRow([
-        TextCellValue('تعداد ارزیابی شده'),
-        IntCellValue(evaluations.length),
-      ]);
-
-      sheet.appendRow([
-        TextCellValue('تعداد باقی مانده'),
-        IntCellValue(classModel.members.length - evaluations.length),
-      ]);
-
-      sheet.appendRow([
-        TextCellValue('تاریخ آخرین بروزرسانی'),
-        TextCellValue(_formatDateTime(DateTime.now())),
-      ]);
-
-      // فاصله
-      sheet.appendRow([]);
-
-      // ========================================================
-      // TABLE HEADER
-      // ========================================================
-
-      final headers = <CellValue>[
-        TextCellValue('شماره'),
-        TextCellValue('نام شاگرد'),
-      ];
-
-      for (int i = 1; i <= 13; i++) {
-        headers.add(TextCellValue('سوال $i'));
-      }
-
-      headers.add(TextCellValue('تاریخ ارزیابی'));
-
-      sheet.appendRow(headers);
-
-      // ========================================================
-      // CREATE EVALUATION MAP
-      // ========================================================
-
-      final Map<String, EvaluationModel> evaluationMap = {};
-
-      for (final evaluation in evaluations) {
-        evaluationMap[evaluation.studentName.trim()] = evaluation;
-      }
-
-      // ========================================================
-      // ADD STUDENTS
-      // ========================================================
-
-      for (int i = 0; i < classModel.members.length; i++) {
-        final studentName = classModel.members[i].trim();
-
-        final evaluation = evaluationMap[studentName];
-
-        final row = <CellValue>[
-          IntCellValue(i + 1),
-          TextCellValue(studentName),
-        ];
-
-        if (evaluation != null) {
-          // ----------------------------------------------
-          // STUDENT HAS EVALUATION
-          // ----------------------------------------------
-
-          for (int q = 0; q < 13; q++) {
-            String answer = '';
-
-            if (q < evaluation.answers.length) {
-              answer = evaluation.answers[q].trim();
-            }
-
-            row.add(TextCellValue(answer.isEmpty ? '-' : answer));
-          }
-
-          row.add(TextCellValue(_formatDateTime(evaluation.evaluatedAt)));
-        } else {
-          // ----------------------------------------------
-          // STUDENT HAS NOT EVALUATED
-          // ----------------------------------------------
-
-          for (int q = 0; q < 13; q++) {
-            row.add(TextCellValue('-'));
-          }
-
-          row.add(TextCellValue('-'));
-        }
-
-        sheet.appendRow(row);
-      }
-
-      // ========================================================
-      // COLUMN WIDTHS
-      // ========================================================
-
-      sheet.setColumnWidth(0, 10);
-
-      sheet.setColumnWidth(1, 25);
-
-      for (int i = 2; i <= 14; i++) {
-        sheet.setColumnWidth(i, 24);
-      }
-
-      sheet.setColumnWidth(15, 22);
-
-      // ========================================================
-      // SAVE SAME FILE
-      // ========================================================
-
-      final directory = await getApplicationDocumentsDirectory();
-
-      final safeClassName = _safeFileName(classModel.className);
-
-      // بدون timestamp
-      // بنابراین برای هر صنف فقط یک فایل داریم
-      final fileName = 'نتایج_$safeClassName.xlsx';
-
-      final file = File('${directory.path}/$fileName');
-
-      final bytes = excel.encode();
-
-      if (bytes == null) {
-        throw Exception('ساخت فایل Excel موفق نشد.');
-      }
-
-      // فایل قبلی با همین نام
-      // با اطلاعات کامل جدید جایگزین می‌شود
-      await file.writeAsBytes(bytes, flush: true);
+      // ✅ فراخوانی سرویس اکسل (که خودش داده‌ها را فیلتر و بدون تکرار می‌سازد)
+      final file = await ExcelExportService.export(
+        classModel: classModel,
+        evaluations: evaluations,
+      );
 
       // ========================================================
       // SUCCESS
@@ -468,7 +296,7 @@ class _ClassListScreenState extends State<ClassListScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Excel با ${evaluations.length} نتیجه بروزرسانی شد.',
+            'فایل Excel با موفقیت در مسیر ${file.path} ذخیره شد.',
             textDirection: TextDirection.rtl,
             style: GoogleFonts.vazirmatn(),
           ),
@@ -513,6 +341,17 @@ class _ClassListScreenState extends State<ClassListScreen> {
         '${twoDigits(dateTime.day)} '
         '${twoDigits(dateTime.hour)}:'
         '${twoDigits(dateTime.minute)}';
+  }
+
+  // ============================================================
+  // SAFE FILE NAME
+  // ============================================================
+
+  String _safeFileName(String value) {
+    return value
+        .trim()
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ');
   }
 
   // ============================================================

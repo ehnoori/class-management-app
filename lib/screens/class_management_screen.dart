@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -91,6 +90,30 @@ class _ClassManagementScreenState
     });
   }
 
+  // تبدیل رشته زمان به دقیقه (مثلاً "2:30" به 150 دقیقه)
+  int? _parseTimeToMinutes(String timeStr) {
+    if (timeStr.isEmpty) return null;
+    
+    // اگر کاربر مثلا 2.30 یا 2:30 وارد کرد، دو نقطه را جایگزین می‌کنیم
+    final cleanStr = timeStr.replaceAll('.', ':');
+    final parts = cleanStr.split(':');
+
+    if (parts.length == 1) {
+      // اگر فقط ساعت وارد شد (مثلا 2)
+      final hour = int.tryParse(parts[0]);
+      if (hour == null) return null;
+      return hour * 60;
+    } else if (parts.length == 2) {
+      // اگر ساعت و دقیقه وارد شد (مثلا 2:30)
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1]);
+      if (hour == null || minute == null) return null;
+      if (minute < 0 || minute > 59) return null; // دقیقه نباید بیشتر از 59 باشد
+      return (hour * 60) + minute;
+    }
+    return null;
+  }
+
   // Save class
   Future<void> saveClass() async {
     if (isSaving) return;
@@ -115,24 +138,32 @@ class _ClassManagementScreenState
       return;
     }
 
-    final int? start = int.tryParse(startTime);
-    final int? end = int.tryParse(endTime);
+    // تبدیل زمان به دقیقه برای مقایسه دقیق
+    final int? startMinutes = _parseTimeToMinutes(startTime);
+    final int? endMinutes = _parseTimeToMinutes(endTime);
 
-    if (start == null ||
-        end == null ||
-        start < 0 ||
-        start > 23 ||
-        end < 1 ||
-        end > 24 ||
-        start >= end) {
-      _showMessage(
-        'زمان را درست وارد کنید؛ شروع ۰ تا ۲۳ و ختم ۱ تا ۲۴ باشد',
-      );
+    if (startMinutes == null || endMinutes == null) {
+      _showMessage('فرمت زمان اشتباه است. مثال صحیح: 2:30 یا 14');
+      return;
+    }
+
+    if (startMinutes < 0 || startMinutes > 23 * 60 + 59) {
+       _showMessage('ساعت شروع باید بین 0 تا 23:59 باشد');
+       return;
+    }
+    
+    if (endMinutes <= 0 || endMinutes > 24 * 60) {
+       _showMessage('ساعت ختم باید بین 0:01 تا 24:00 باشد');
+       return;
+    }
+
+    if (startMinutes >= endMinutes) {
+      _showMessage('زمان شروع باید قبل از زمان ختم باشد');
       return;
     }
 
     // Keep the existing ClassModel.classTime field.
-    final String classTime = '$start - $end';
+    final String classTime = '$startTime - $endTime';
 
     if (members.isEmpty) {
       _showMessage('لطفاً حداقل یک عضو برای صنف اضافه کنید');
@@ -307,9 +338,10 @@ class _ClassManagementScreenState
 
   // Start and end time fields
   Widget _timeFields() {
-    final numericFormatter = <TextInputFormatter>[
-      FilteringTextInputFormatter.digitsOnly,
-      LengthLimitingTextInputFormatter(2),
+    // ✅ تغییر در فرمت‌کننده‌ها: اجازه دادن به عدد و علامت دو نقطه
+    final timeFormatter = <TextInputFormatter>[
+      FilteringTextInputFormatter.allow(RegExp(r'[0-9:]')),
+      LengthLimitingTextInputFormatter(5), // حداکثر 5 کاراکتر مثل 24:59
     ];
 
     return Row(
@@ -317,20 +349,20 @@ class _ClassManagementScreenState
         Expanded(
           child: _textField(
             controller: startTimeController,
-            hintText: 'شروع درس',
+            hintText: 'شروع (مثلاً 2:30)',
             icon: Icons.access_time_rounded,
-            keyboardType: TextInputType.number,
-            inputFormatters: numericFormatter,
+            keyboardType: TextInputType.datetime, // کیبورد دارای دو نقطه
+            inputFormatters: timeFormatter,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _textField(
             controller: endTimeController,
-            hintText: 'ختم درس',
+            hintText: 'ختم (مثلاً 4:30)',
             icon: Icons.access_time_rounded,
-            keyboardType: TextInputType.number,
-            inputFormatters: numericFormatter,
+            keyboardType: TextInputType.datetime, // کیبورد دارای دو نقطه
+            inputFormatters: timeFormatter,
           ),
         ),
       ],
