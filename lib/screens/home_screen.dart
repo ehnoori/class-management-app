@@ -129,48 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 0,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          elevation: 10,
-          selectedItemColor: primaryBlue,
-          unselectedItemColor: secondaryTextColor,
-
-          selectedLabelStyle: GoogleFonts.vazirmatn(
-            fontSize: (screenWidth * 0.03).clamp(11.0, 14.0),
-            fontWeight: FontWeight.w500,
-          ),
-
-          unselectedLabelStyle: GoogleFonts.vazirmatn(
-            fontSize: (screenWidth * 0.03).clamp(11.0, 14.0),
-            fontWeight: FontWeight.w400,
-          ),
-
-          onTap: (index) {
-            if (index == 1) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('صفحه مدیریت سوالات هنوز وصل نشده است.'),
-                ),
-              );
-            }
-          },
-
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'خانه',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.quiz_rounded),
-              activeIcon: Icon(Icons.quiz_rounded),
-              label: 'سوالات',
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -614,59 +614,68 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: currentQuestion > 0 && !isSaving
-                            ? previousQuestion
-                            : null,
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(0, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        child: Text(
-                          'قبلی',
-                          style: GoogleFonts.vazirmatn(fontSize: 13),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: isSaving ? null : nextQuestion,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          minimumSize: const Size(0, 50),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        child: Text(
-                          isSaving
-                              ? 'در حال ذخیره...'
-                              : currentQuestion == questions.length - 1
-                              ? 'ثبت ارزیابی'
-                              : 'بعدی',
-                          style: GoogleFonts.vazirmatn(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+  padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+  decoration: const BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.vertical(
+      top: Radius.circular(22),
+    ),
+  ),
+  child: Row(
+    textDirection: TextDirection.ltr,
+    children: [
+      // دکمه قبلی - سمت چپ
+      Expanded(
+        child: OutlinedButton(
+          onPressed: currentQuestion > 0 && !isSaving
+              ? previousQuestion
+              : null,
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(0, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          child: Text(
+            'قبلی',
+            style: GoogleFonts.vazirmatn(
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+
+      const SizedBox(width: 10),
+
+      // دکمه بعدی - سمت راست
+      Expanded(
+        child: ElevatedButton(
+          onPressed: isSaving ? null : nextQuestion,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            minimumSize: const Size(0, 50),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          child: Text(
+            isSaving
+                ? 'در حال ذخیره...'
+                : currentQuestion == questions.length - 1
+                    ? 'ثبت ارزیابی'
+                    : 'بعدی',
+            style: GoogleFonts.vazirmatn(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+),
             ],
           ),
         ),

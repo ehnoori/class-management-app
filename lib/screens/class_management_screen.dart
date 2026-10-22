@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../database/isar_service.dart';
@@ -23,7 +24,10 @@ class _ClassManagementScreenState
   final TextEditingController teacherController =
       TextEditingController();
 
-  final TextEditingController classTimeController =
+  final TextEditingController startTimeController =
+      TextEditingController();
+
+  final TextEditingController endTimeController =
       TextEditingController();
 
   final TextEditingController memberController =
@@ -38,12 +42,13 @@ class _ClassManagementScreenState
   void dispose() {
     classNameController.dispose();
     teacherController.dispose();
-    classTimeController.dispose();
+    startTimeController.dispose();
+    endTimeController.dispose();
     memberController.dispose();
     super.dispose();
   }
 
-  // یکسان‌سازی نام برای تشخیص نام‌های تکراری
+  // Normalize names to detect duplicates
   String _normalizeName(String name) {
     return name
         .trim()
@@ -51,7 +56,7 @@ class _ClassManagementScreenState
         .toLowerCase();
   }
 
-  // افزودن عضو
+  // Add member
   void addMember() {
     final String memberName = memberController.text
         .trim()
@@ -79,20 +84,21 @@ class _ClassManagementScreenState
     });
   }
 
-  // حذف عضو
+  // Remove member
   void removeMember(int index) {
     setState(() {
       members.removeAt(index);
     });
   }
 
-  // ذخیره صنف
+  // Save class
   Future<void> saveClass() async {
     if (isSaving) return;
 
     final String className = classNameController.text.trim();
     final String teacherName = teacherController.text.trim();
-    final String classTime = classTimeController.text.trim();
+    final String startTime = startTimeController.text.trim();
+    final String endTime = endTimeController.text.trim();
 
     if (className.isEmpty) {
       _showMessage('لطفاً نام صنف را وارد کنید');
@@ -104,17 +110,36 @@ class _ClassManagementScreenState
       return;
     }
 
-    if (classTime.isEmpty) {
-      _showMessage('لطفاً تایم درسی را وارد کنید');
+    if (startTime.isEmpty || endTime.isEmpty) {
+      _showMessage('لطفاً زمان شروع و ختم درس را وارد کنید');
       return;
     }
+
+    final int? start = int.tryParse(startTime);
+    final int? end = int.tryParse(endTime);
+
+    if (start == null ||
+        end == null ||
+        start < 0 ||
+        start > 23 ||
+        end < 1 ||
+        end > 24 ||
+        start >= end) {
+      _showMessage(
+        'زمان را درست وارد کنید؛ شروع ۰ تا ۲۳ و ختم ۱ تا ۲۴ باشد',
+      );
+      return;
+    }
+
+    // Keep the existing ClassModel.classTime field.
+    final String classTime = '$start - $end';
 
     if (members.isEmpty) {
       _showMessage('لطفاً حداقل یک عضو برای صنف اضافه کنید');
       return;
     }
 
-    // بررسی دوباره نام‌های تکراری
+    // Check duplicate members
     final normalizedMembers =
         members.map(_normalizeName).toList();
 
@@ -141,9 +166,7 @@ class _ClassManagementScreenState
         await isar.classModels.put(newClass);
       });
 
-      // اطمینان از ذخیره شدن صنف
-      final savedClass =
-          await isar.classModels.get(newClass.id);
+      final savedClass = await isar.classModels.get(newClass.id);
 
       if (savedClass == null) {
         throw Exception('صنف در دیتابیس ذخیره نشد');
@@ -151,7 +174,6 @@ class _ClassManagementScreenState
 
       if (!mounted) return;
 
-      // انتقال همان صنف ذخیره‌شده به صفحه انتخاب شاگرد
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -176,7 +198,7 @@ class _ClassManagementScreenState
     }
   }
 
-  // نمایش پیام
+  // Show message
   void _showMessage(
     String message, {
     bool success = false,
@@ -207,7 +229,7 @@ class _ClassManagementScreenState
       );
   }
 
-  // عنوان فیلد
+  // Label
   Widget _label(String text) {
     return Align(
       alignment: Alignment.centerRight,
@@ -223,14 +245,18 @@ class _ClassManagementScreenState
     );
   }
 
-  // فیلد متنی
+  // Text field
   Widget _textField({
     required TextEditingController controller,
     required String hintText,
     required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       textDirection: TextDirection.rtl,
       textAlign: TextAlign.right,
       style: GoogleFonts.vazirmatn(
@@ -279,7 +305,39 @@ class _ClassManagementScreenState
     );
   }
 
-  // ورودی افزودن عضو
+  // Start and end time fields
+  Widget _timeFields() {
+    final numericFormatter = <TextInputFormatter>[
+      FilteringTextInputFormatter.digitsOnly,
+      LengthLimitingTextInputFormatter(2),
+    ];
+
+    return Row(
+      children: [
+        Expanded(
+          child: _textField(
+            controller: startTimeController,
+            hintText: 'شروع درس',
+            icon: Icons.access_time_rounded,
+            keyboardType: TextInputType.number,
+            inputFormatters: numericFormatter,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _textField(
+            controller: endTimeController,
+            hintText: 'ختم درس',
+            icon: Icons.access_time_rounded,
+            keyboardType: TextInputType.number,
+            inputFormatters: numericFormatter,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Add member input
   Widget _memberInput() {
     return Row(
       children: [
@@ -310,7 +368,7 @@ class _ClassManagementScreenState
     );
   }
 
-  // فهرست اعضا
+  // Members list
   Widget _buildMembersList() {
     if (members.isEmpty) {
       return Container(
@@ -466,14 +524,10 @@ class _ClassManagementScreenState
 
                 _label('تایم درسی :'),
                 const SizedBox(height: 8),
-                _textField(
-                  controller: classTimeController,
-                  hintText: 'مثلاً 1 - 2 یا 1 تا 3',
-                  icon: Icons.access_time_rounded,
-                ),
+                _timeFields(),
                 const SizedBox(height: 22),
 
-                _label('   اعضای صنف : '),
+                _label('اعضای صنف :'),
                 const SizedBox(height: 8),
                 _memberInput(),
                 const SizedBox(height: 12),
